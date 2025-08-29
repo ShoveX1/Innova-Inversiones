@@ -5,6 +5,7 @@ import type { PluginOption } from 'vite'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react() as PluginOption],
+  base: '/app_2/',
   server: {
     port: 3000,
     proxy: {

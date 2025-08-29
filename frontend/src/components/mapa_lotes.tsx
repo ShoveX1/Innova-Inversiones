@@ -100,7 +100,7 @@ export default function MapaLotes() {
         const timeoutId = setTimeout(() => controller.abort(), 10000);
         
         // Usar la versión rápida de la API
-        const response = await axios.get("http://127.0.0.1:8000/api/maps/lotes/fast/", {
+        const response = await axios.get("https://innova-inversiones.onrender.com//api/maps/lotes/fast/", {
           signal: controller.signal,
           timeout: 10000
         });
