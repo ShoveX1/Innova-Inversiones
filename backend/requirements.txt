@@ -21,7 +21,6 @@ djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.0
 djoser==2.3.1
 future==1.0.0
-gevent-websocket==0.10.1
 greenlet==3.1.1
 gunicorn==23.0.0
 idna==3.10
