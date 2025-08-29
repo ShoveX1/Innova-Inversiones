@@ -1,0 +1,1 @@
+web: gunicorn innova_inversiones.wsgi:application

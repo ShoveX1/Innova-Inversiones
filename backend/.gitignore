@@ -7,6 +7,7 @@ venv/
 *.pyo
 *.pyd
 __pycache__/
+node_modules/
 
 # Base de datos SQLite (si la usas)
 db.sqlite3

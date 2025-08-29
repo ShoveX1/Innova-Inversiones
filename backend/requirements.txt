@@ -25,6 +25,7 @@ future==1.0.0
 gevent==24.2.1
 gevent-websocket==0.10.1
 greenlet==3.1.1
+gunicorn==23.0.0
 idna==3.10
 mysql-connector-python==9.1.0
 oauthlib==3.2.2
@@ -44,6 +45,7 @@ pywin32-ctypes==0.2.3
 reportlab==4.2.5
 requests==2.32.3
 requests-oauthlib==2.0.0
+setuptools==80.9.0
 social-auth-app-django==5.4.3
 social-auth-core==4.6.1
 SQLAlchemy==2.0.36
@@ -52,5 +54,6 @@ typing_extensions==4.12.2
 tzdata==2025.2
 urllib3==2.4.0
 whichcraft==0.6.1
+whitenoise==6.9.0
 zope.event==5.0
 zope.interface==7.0.3
