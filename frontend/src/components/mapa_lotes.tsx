@@ -100,7 +100,7 @@ export default function MapaLotes() {
         const timeoutId = setTimeout(() => controller.abort(), 10000);
         
         // Usar la versión rápida de la API
-        const response = await axios.get("https://innova-inversiones.onrender.com//api/maps/lotes/fast/", {
+        const response = await axios.get("https://innova-inversiones.onrender.com/api/maps/lotes/fast/", {
           signal: controller.signal,
           timeout: 10000
         });
@@ -181,7 +181,7 @@ export default function MapaLotes() {
       <object
         ref={objectRef}
         type="image/svg+xml"
-        data="/planovirtual 1_edit_ids.svg"
+        data={`${import.meta.env.BASE_URL}planovirtual-1_edit_ids.svg`}
         className="w-full h-auto"
         onLoad={handleSvgLoad}
       />
