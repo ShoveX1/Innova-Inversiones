@@ -13,6 +13,8 @@ export interface Lote {
   area_lote: number;
   precio: number | null;
   precio_metro_cuadrado: number | null;
+  estado: string; 
+  estado_nombre: string;
   // agrega más campos si los necesitas
 }
 

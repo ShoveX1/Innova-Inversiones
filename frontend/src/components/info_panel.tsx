@@ -9,6 +9,8 @@ type Props = {
       area_lote: number;
       precio: number | null;
       precio_metro_cuadrado: number | null;
+      estado: string;
+      estado_nombre: string;
     } | null;
     onClose?: () => void;
   };
@@ -43,11 +45,17 @@ type Props = {
   
         {!loading && !error && lote && (
           <div style={{ display: "grid", gap: "8px" }}>
-            <div><strong>Código:</strong> {lote.codigo}</div>
-            <div><strong>Manzana / Lote:</strong> {lote.manzana} / {lote.lote_numero}</div>
+            <div><strong>Innova Inversiones</strong></div>
+            <div><strong>Manzana: </strong> {lote.manzana}  <strong>Lote: </strong> {lote.lote_numero}</div>
             <div><strong>Área (m²):</strong> {lote.area_lote}</div>
-            <div><strong>Precio m²:</strong> {lote.precio_metro_cuadrado ?? "—"}</div>
-            <div><strong>Precio total:</strong> {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}</div>
+            {/* condicion para mostrar estado */}
+            {lote.estado ==="1" ? (
+              <div><strong>Precio Total: </strong> {lote.precio != null ? currency.format(Number(lote.precio)) : "—"} </div>
+            ):lote.estado ==="2" ?(
+              <div><strong>Estado: </strong> Reservado </div>
+            ):(
+              <div><strong>Estado: </strong> Vendido </div>
+            )}
           </div>
         )}
       </aside>

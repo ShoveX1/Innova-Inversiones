@@ -28,6 +28,8 @@ def lotes_estado(request):
         # y select_related para evitar N+1 queries
         lotes_data = Lote.objects.select_related('estado').values(
             'codigo', 
+            'manzana',
+            'lote__numero'
             'estado__id',
             'estado__nombre',
             'area_lote',
@@ -39,6 +41,8 @@ def lotes_estado(request):
         data = [
             {
                 "codigo": lote['codigo'].lower(),
+                "manzana": str(lote['manzana']),
+                "lote_numero": (lote['lote__numero']),
                 "estado": str(lote['estado__id']),
                 "estado_nombre": lote['estado__nombre'],
                 "area_lote": float(lote['area_lote']),
@@ -75,7 +79,7 @@ def lotes_estado_fast(request):
         
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT l.codigo, l.estado_id, e.nombre as estado_nombre, 
+                SELECT l.codigo, l.manzana, l.lote_numero, l.estado_id, e.nombre as estado_nombre, 
                        l.area_lote, l.perimetro, l.precio
                 FROM database_lote l
                 JOIN database_estadolote e ON l.estado_id = e.id
@@ -85,11 +89,13 @@ def lotes_estado_fast(request):
             data = [
                 {
                     "codigo": row[0].lower(),
-                    "estado": str(row[1]),
-                    "estado_nombre": row[2],
-                    "area_lote": float(row[3]),
-                    "perimetro": float(row[4]),
-                    "precio": float(row[5]) if row[5] else None
+                    "manzana": str(row[1]),
+                    "lote_numero": (row[2]),
+                    "estado": str(row[3]),
+                    "estado_nombre": row[4],
+                    "area_lote": float(row[5]),
+                    "perimetro": float(row[6]),
+                    "precio": float(row[7]) if row[7] else None
                 }
                 for row in cursor.fetchall()
             ]
