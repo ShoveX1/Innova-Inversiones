@@ -10,12 +10,18 @@ interface Lote {
   precio: number | null;
 }
 
-export default function MapaLotes() {
+type Props = { onSelectCodigo: (codigo:string) => void };
+
+export default function MapaLotes({ onSelectCodigo }: Props) {
   const objectRef = useRef<HTMLObjectElement>(null);
   const [lotes, setLotes] = useState<Lote[]>([]);
   const [svgLoaded, setSvgLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const handleClick = (e: React.MouseEvent<SVGPathElement>) => {
+    const codigo = (e.currentTarget as SVGPathElement).dataset.codigo;
+    if (codigo) onSelectCodigo(codigo);
+  };
 
   // Memoizar el mapeo de colores para evitar recálculos
   const colorMap = useMemo(() => ({
@@ -41,6 +47,11 @@ export default function MapaLotes() {
       if (lote) {
         // Aplicar color según el estado del lote
         el.setAttribute('fill', colorMap[lote.estado as keyof typeof colorMap] || "#ffffff");
+
+        // 2. AGREGAR ESTO para que funcione el click:
+        el.setAttribute('data-codigo', lote.codigo);
+        el.addEventListener('click', (e) => handleClick(e as any));
+
         appliedCount++;
       }
     });
