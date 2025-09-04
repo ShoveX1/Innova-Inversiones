@@ -171,6 +171,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "https://innovainversiones.com",
     "https://innova-inversiones-kgcv.vercel.app",
+    "https://innova-inversiones.vercel.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
