@@ -1,15 +1,15 @@
 
 export default function Header() {
   return (
-    <header className="bg-gradient-to-r from-blue-900 to-blue-800 text-white">
-        <div className="container mx-auto px-4 py-4">
+    <header className="bg-gradient-to-r from-blue-900 to-blue-700 text-white shadow-xl relative overflow-hidden">
+        <div className="container mx-auto px-4 py-4 max-w-6xl">
             <div className="flex items-center justify-between">
                 {/* Logo y Titulo */ }
                 <div className="flex items-center space-x-3">
-                    <a href="/" className="flex items-center justify-center">
+                    <a href="/" className="flex items-center justify-center hover:scale-110 active:scale-95">
                         {/* Logo PlaceHolder*/}
                         
-                        <svg width="120" height="32" viewBox="0 0 139 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="150" height="40" viewBox="0 0 139 38" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M0 32.19C0 32.8 0.0699927 32.88 0.679993 32.88C8.16999 32.88 15.67 32.88 23.16 32.88C23.73 32.88 24.28 32.84 24.84 32.73C29.62 31.79 32.88 27.84 32.88 22.96C32.88 15.56 32.88 8.15 32.88 0.75C32.88 0.07 32.8 0 32.12 0C28.29 0 24.46 0 20.63 0C17.09 0 13.55 0 10 0C4.31 0.01 0 4.34003 0 10.03C0 17.42 0 24.81 0 32.19ZM3.79004 8.69C4.09004 7.2 4.78 6.03005 5.88 5.11005C7.03 4.15005 8.36 3.67999 9.87 3.67999C16.16 3.67999 22.45 3.67999 28.74 3.67999C29.16 3.67999 29.23 3.81001 29.23 4.20001C29.22 10.48 29.23 16.75 29.23 23.03C29.23 26.02 27.05 28.67 24.26 29.09H3.67999L3.79999 8.71002L3.79004 8.69Z" fill="white"/>
                         <path d="M9.17004 14.1801V30.7001H6.16003V9.67017H9.17004L18.18 20.1901V2.16016H21.19V24.6901H18.18L9.17004 14.1801Z" fill="white"/>
                         <path d="M14.71 14.1801V30.7001H11.7V9.67017H14.71L23.72 20.1901V2.16016H26.73V24.6901H23.72L14.71 14.1801Z" fill="white"/>
@@ -38,10 +38,10 @@ export default function Header() {
 
                 {/* Navegación */}
                 <nav className="hidden md:flex space-x-6">
-                    <a href="#" className="hover:text-blue-200 transition-colors text-white">PROYECTO</a>
-                    <a href="#" className="hover:text-blue-200 transition-colors text-white">¿CÓMO COMPRAR?</a>
-                    <a href="#" className="hover:text-blue-200 transition-colors text-white">ASESORES</a>
-                    <a href="#" className="hover:text-blue-200 transition-colors font-semibold text-white">CONTÁCTANOS</a>
+                    <a href="#" className="p-2 hover:text-blue-200 transition-colors text-white hover:scale-110 active:scale-95">PROYECTO</a>
+                    <a href="#" className="p-2 hover:text-blue-200 transition-colors text-white hover:scale-110 active:scale-95">¿CÓMO COMPRAR?</a>
+                    <a href="#" className="p-2 hover:text-blue-200 transition-colors text-white hover:scale-110 active:scale-95">ASESORES</a>
+                    <a href="#" className="px-4 py-1 hover:text-blue-200 transition-colors font-bold text-white text-lg hover:scale-110 active:scale-95">CONTÁCTANOS</a>
                 </nav>
             </div>
         </div>

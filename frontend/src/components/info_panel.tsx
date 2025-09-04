@@ -19,42 +19,32 @@ type Props = {
   
   export default function InfoPanel({ loading, error, lote, onClose }: Props) {
     return (
-      <aside
-        style={{
-          width: "320px",
-          height: "100vh",
-          background: "#f7f7f8",
-          borderLeft: "1px solid #e2e2e2",
-          padding: "16px",
-          boxSizing: "border-box",
-          color: "black",
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={{ margin: 0, fontSize: "18px" }}>Panel de Información</h2>
+      <aside className="w-full h-full bg-zinc-50 p-4 box-border text-gray-900">
+        <div className="flex justify-between items-center">
+          <h2 className="m-0 text-lg font-semibold">Panel de Información</h2>
           <button onClick={onClose} className="bg-transparent hover:bg-gray-100 text-gray-700 font-medium px-4 py-2 rounded-lg border border-gray-300 hover:border-gray-400 transition-all duration-200">
             Cerrar
           </button>
         </div>
-  
-        <hr style={{ margin: "12px 0" }} />
-  
-        {loading && <p>Cargando lotes…</p>}
-        {error && <p style={{ color: "crimson" }}>Error: {error}</p>}
-        {!loading && !error && !lote && <p>Selecciona un lote en el mapa.</p>}
-  
+
+        <hr className="my-3 border-gray-200" />
+
+        {loading && <p className="text-sm text-gray-600">Cargando lotes…</p>}
+        {error && <p className="text-sm text-red-600">Error: {error}</p>}
+        {!loading && !error && !lote && <p className="text-sm text-gray-600">Selecciona un lote en el mapa.</p>}
+
         {!loading && !error && lote && (
-          <div style={{ display: "grid", gap: "8px" }}>
-            <div><strong>Innova Inversiones</strong></div>
-            <div><strong>Manzana: </strong> {lote.manzana}  <strong>Lote: </strong> {lote.lote_numero}</div>
-            <div><strong>Área (m²):</strong> {lote.area_lote}</div>
+          <div className="grid gap-2 text-sm">
+            <div className="font-semibold">Innova Inversiones</div>
+            <div><span className="font-semibold">Manzana:</span> {lote.manzana}  <span className="font-semibold">Lote:</span> {lote.lote_numero}</div>
+            <div><span className="font-semibold">Área (m²):</span> {lote.area_lote}</div>
             {/* condicion para mostrar estado */}
             {lote.estado ==="1" ? (
-              <div><strong>Precio Total: </strong> {lote.precio != null ? currency.format(Number(lote.precio)) : "—"} </div>
+              <div><span className="font-semibold">Precio Total:</span> {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}</div>
             ):lote.estado ==="2" ?(
-              <div><strong>Estado: </strong> Reservado </div>
+              <div><span className="font-semibold">Estado:</span> Reservado</div>
             ):(
-              <div><strong>Estado: </strong> Vendido </div>
+              <div><span className="font-semibold">Estado:</span> Vendido</div>
             )}
           </div>
         )}

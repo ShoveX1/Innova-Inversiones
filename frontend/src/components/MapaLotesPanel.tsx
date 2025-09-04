@@ -47,19 +47,21 @@ export default function MapaLotesPanel() {
   );
 
   return (
-    <div style={{ display: "flex", width: "100%", height: "100vh", overflow: "hidden" }}>
-      {/* Mapa ocupa el resto del espacio */}
-      <div style={{ flex: 1, overflow: "auto" }}>
-        <MapaLotes onSelectCodigo={setSelectedCodigo} />
+    <div className="flex h-screen">
+      {/* Panel 20% a la izquierda */}
+      <div className="w-1/5 h-full border-r border-gray-200 bg-zinc-50">
+        <InfoPanel
+          loading={loading}
+          error={error}
+          lote={selectedLote}
+          onClose={() => setSelectedCodigo(null)}
+        />
       </div>
 
-      {/* Panel lateral fijo */}
-      <InfoPanel
-        loading={loading}
-        error={error}
-        lote={selectedLote}
-        onClose={() => setSelectedCodigo(null)}
-      />
+      {/* Mapa 80% a la derecha */}
+      <div className="w-4/5 h-full">
+        <MapaLotes onSelectCodigo={setSelectedCodigo} selectedCodigo={selectedCodigo} />
+      </div>
     </div>
   );
 }

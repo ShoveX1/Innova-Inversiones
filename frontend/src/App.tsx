@@ -7,17 +7,17 @@ function App() {
 
   return (
     <>
-      <div>
-        <Header />
+      <div className="min-h-screen bg-background">
+        <header>
+          <Header />
+        </header>
+          <main className="flex-1 flex">
+            <div className="flex-1">
+              <MapaLotesPanel />
+            </div>
+          </main>
       </div>
-      <div>
-        <h1 className="text-Black text-4xl font-bold">Mapa de Lotes</h1>
-        <MapaLotesPanel />
-      </div>
-      <div>
-        <h2 className="text-white text-4xl font-bold">Panel de informacion</h2>
-        
-      </div>
+      
     </>
   )
 }
