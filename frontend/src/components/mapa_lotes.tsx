@@ -69,7 +69,7 @@ export default function MapaLotes({ onSelectCodigo }: Props) {
         console.log('🚀 Iniciando carga de datos...');
         
         // Usar la URL de la API con fallback
-        const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+        const apiUrl = import.meta.env.VITE_API_URL;
         const response = await axios.get(`${apiUrl}/api/maps/lotes/fast/`);
         console.log('✅ Datos recibidos:', response.data.length, 'lotes');
         setLotes(response.data);

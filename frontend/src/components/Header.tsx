@@ -38,10 +38,10 @@ export default function Header() {
 
                 {/* Navegación */}
                 <nav className="hidden md:flex space-x-6">
-                    <a href="#" className="hover:text-blue-200 transition-colors">PROYECTO</a>
-                    <a href="#" className="hover:text-blue-200 transition-colors">¿CÓMO COMPRAR?</a>
-                    <a href="#" className="hover:text-blue-200 transition-colors">ASESORES</a>
-                    <a href="#" className="hover:text-blue-200 transition-colors font-semibold">CONTÁCTANOS</a>
+                    <a href="#" className="hover:text-blue-200 transition-colors text-white">PROYECTO</a>
+                    <a href="#" className="hover:text-blue-200 transition-colors text-white">¿CÓMO COMPRAR?</a>
+                    <a href="#" className="hover:text-blue-200 transition-colors text-white">ASESORES</a>
+                    <a href="#" className="hover:text-blue-200 transition-colors font-semibold text-white">CONTÁCTANOS</a>
                 </nav>
             </div>
         </div>

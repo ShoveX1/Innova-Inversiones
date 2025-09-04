@@ -32,7 +32,7 @@ type Props = {
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h2 style={{ margin: 0, fontSize: "18px" }}>Panel de Información</h2>
-          <button onClick={onClose} style={{ border: "1px solid #ddd", padding: "4px 8px", cursor: "pointer" }}>
+          <button onClick={onClose} className="bg-transparent hover:bg-gray-100 text-gray-700 font-medium px-4 py-2 rounded-lg border border-gray-300 hover:border-gray-400 transition-all duration-200">
             Cerrar
           </button>
         </div>

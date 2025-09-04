@@ -4,7 +4,7 @@ import axios from "axios";
 import MapaLotes from "./mapa_lotes";        // tu SVG existente (ver snippet abajo)
 import InfoPanel from "./info_panel";        // el panel
 // Ajusta la URL según tu backend (DRF)
-const API_URL = import.meta.env?.VITE_API_URL ?? "http://localhost:8000";
+const API_URL = import.meta.env?.VITE_API_URL;
 
 export interface Lote {
   codigo: string;
