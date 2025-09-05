@@ -1,23 +1,26 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
-import axios from "axios";
+
 
 interface Lote {
   codigo: string;
   estado: string;
   estado_nombre: string;
   area_lote: number;
-  perimetro: number;
+  perimetro?: number;
   precio: number | null;
 }
 
-type Props = { onSelectCodigo: (codigo:string) => void; selectedCodigo?: string | null };
+type Props = { 
+  lotes: Lote[];
+  loading: boolean;
+  error: string | null;
+  onSelectCodigo: (codigo: string) => void;
+  selectedCodigo?: string | null;
+ };
 
-export default function MapaLotes({ onSelectCodigo, selectedCodigo = null }: Props) {
+export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selectedCodigo = null }: Props) {
   const objectRef = useRef<HTMLObjectElement>(null);
-  const [lotes, setLotes] = useState<Lote[]>([]);
   const [svgLoaded, setSvgLoaded] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
   const [selectedLote, setSelectedLote] = useState<string | null>(null);
 
@@ -197,30 +200,6 @@ export default function MapaLotes({ onSelectCodigo, selectedCodigo = null }: Pro
   }, [colorMap, selectedLote]);
 
   // Cargar datos del backend
-  useEffect(() => {
-    const fetchLotes = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        console.log('🚀 Iniciando carga de datos...');
-        
-        // Usar la URL de la API con fallback
-        const apiUrl = import.meta.env.VITE_API_URL;
-        const response = await axios.get(`${apiUrl}/api/maps/lotes/fast/`);
-        console.log('✅ Datos recibidos:', response.data.length, 'lotes');
-        setLotes(response.data);
-        
-      } catch (err: any) {
-        console.error('❌ Error en la petición:', err);
-        setError('Error al cargar los datos. Verifica la conexión.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLotes();
-  }, []);
 
   // Aplicar colores cuando tanto el SVG como los datos estén listos, o cuando cambie la selección
   useEffect(() => {

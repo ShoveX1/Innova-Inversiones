@@ -15,6 +15,7 @@ export interface Lote {
   precio_metro_cuadrado: number | null;
   estado: string; 
   estado_nombre: string;
+  perimetro?: number;
   // agrega más campos si los necesitas
 }
 
@@ -60,7 +61,13 @@ export default function MapaLotesPanel() {
 
       {/* Mapa 80% a la derecha */}
       <div className="w-4/5 h-full">
-        <MapaLotes onSelectCodigo={setSelectedCodigo} selectedCodigo={selectedCodigo} />
+        <MapaLotes  
+          lotes={lotes}
+          loading={loading}
+          error={error}
+          onSelectCodigo={setSelectedCodigo}
+          selectedCodigo={selectedCodigo}
+        />
       </div>
     </div>
   );
