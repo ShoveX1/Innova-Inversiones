@@ -48,25 +48,25 @@ export default function MapaLotesPanel() {
   );
 
   return (
-    <div className="flex h-screen">
-      {/* Panel 20% a la izquierda */}
-      <div className="w-1/5 h-full border-r border-gray-200 bg-zinc-50">
-        <InfoPanel
-          loading={loading}
-          error={error}
-          lote={selectedLote}
-          onClose={() => setSelectedCodigo(null)}
-        />
-      </div>
-
-      {/* Mapa 80% a la derecha */}
-      <div className="w-4/5 h-full">
+    <div className="flex h-screen flex-col md:flex-row">
+      {/* Mapa arriba en móvil, a la derecha en desktop */}
+      <div className="order-1 md:order-2 w-full md:w-4/5 h-[60vh] md:h-full">
         <MapaLotes  
           lotes={lotes}
           loading={loading}
           error={error}
           onSelectCodigo={setSelectedCodigo}
           selectedCodigo={selectedCodigo}
+        />
+      </div>
+
+      {/* Panel debajo en móvil, a la izquierda en desktop */}
+      <div className="order-2 md:order-1 w-full md:w-1/5 max-h-[40vh] md:h-full border-t md:border-t-0 md:border-r border-gray-200 bg-zinc-50 overflow-auto">
+        <InfoPanel
+          loading={loading}
+          error={error}
+          lote={selectedLote}
+          onClose={() => setSelectedCodigo(null)}
         />
       </div>
     </div>

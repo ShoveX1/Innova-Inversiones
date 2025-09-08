@@ -426,7 +426,6 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       setIsPanning(false);
       lastPointerRef.current = null;
     } else if (e.touches.length === 1) {
-      if (scale <= 1) return; // no pan si no hay zoom
       e.preventDefault();
       const t = e.touches[0];
       lastPointerRef.current = { x: t.clientX, y: t.clientY };
@@ -512,6 +511,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     const svgDoc = objectRef.current?.contentDocument;
     const svgEl = svgDoc?.querySelector('svg') as SVGSVGElement | null;
     if (!svgEl) return;
+    (svgEl.style as any).touchAction = 'none';
     const viewBoxAttr = svgEl.getAttribute('viewBox');
     if (viewBoxAttr) {
       const [x, y, w, h] = viewBoxAttr.trim().split(/\s+|,/).map(Number);
@@ -599,6 +599,10 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     svgEl.addEventListener('mousemove', onMouseMove);
     svgEl.addEventListener('mouseup', endPanSvg);
     svgEl.addEventListener('mouseleave', endPanSvg);
+    svgEl.addEventListener('touchstart', handleTouchStart as any, { passive: false } as any);
+    svgEl.addEventListener('touchmove', handleTouchMove as any, { passive: false } as any);
+    svgEl.addEventListener('touchend', handleTouchEnd as any);
+    svgEl.addEventListener('touchcancel', handleTouchEnd as any);
 
     return () => {
       svgEl.removeEventListener('wheel', onWheel as any);
@@ -607,8 +611,12 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       svgEl.removeEventListener('mousemove', onMouseMove as any);
       svgEl.removeEventListener('mouseup', endPanSvg as any);
       svgEl.removeEventListener('mouseleave', endPanSvg as any);
+      svgEl.removeEventListener('touchstart', handleTouchStart as any);
+      svgEl.removeEventListener('touchmove', handleTouchMove as any);
+      svgEl.removeEventListener('touchend', handleTouchEnd as any);
+      svgEl.removeEventListener('touchcancel', handleTouchEnd as any);
     };
-  }, [svgLoaded, scheduleWheelZoom, isPanning, clampPan, containerSize, setSvgViewBox]);
+  }, [svgLoaded, scheduleWheelZoom, isPanning, clampPan, containerSize, setSvgViewBox, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   return (
     <div className="relative">
@@ -648,38 +656,38 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchEnd}
-        style={{ cursor: isPanning ? 'grabbing' : scale > 1 ? 'grab' : 'default' }}
+        style={{ cursor: isPanning ? 'grabbing' : scale > 1 ? 'grab' : 'default', touchAction: 'none' }}
       >
         {/* Controles de zoom */}
-        <div className="absolute top-6 right-6 bg-white/95 backdrop-blur-sm shadow-xl rounded-xl p-3 z-20 flex flex-col gap-3 border border-gray-200">
+        <div className="absolute bottom-3 right-3 md:top-6 md:right-6 md:bottom-auto bg-white/80 md:bg-white/95 backdrop-blur-sm shadow-xl rounded-xl p-2 md:p-3 z-20 flex flex-col gap-2 md:gap-3 border border-gray-200 opacity-90 md:opacity-100 hover:opacity-100">
           <button
             onClick={handleZoomIn}
-            className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-bold text-lg"
+            className="w-9 h-9 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-bold text-base md:text-lg"
             title="Acercar"
           >
             +
           </button>
           <button
             onClick={handleZoomOut}
-            className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-bold text-lg"
+            className="w-9 h-9 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-bold text-base md:text-lg"
             title="Alejar"
           >
             −
           </button>
           <button
             onClick={handleResetZoom}
-            className="w-12 h-12 bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 text-sm font-bold"
+            className="w-9 h-9 md:w-12 md:h-12 bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 text-xs md:text-sm font-bold"
             title="Zoom Original"
           >
             ⌂
           </button>
         </div>
 
-        {/* Indicador de zoom */}
-        <div className="absolute top-6 left-6 bg-white/95 backdrop-blur-sm shadow-xl rounded-xl px-4 py-2 z-20 border border-gray-200">
+        {/* Indicador de zoom (discreto en móvil) */}
+        <div className="absolute left-3 bottom-3 md:top-6 md:left-6 md:bottom-auto bg-white/70 md:bg-white/95 backdrop-blur-sm shadow-xl rounded-xl px-2 py-1 md:px-4 md:py-2 z-20 border border-gray-200 text-xs md:text-sm opacity-90 md:opacity-100">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-            <span className="text-gray-700 font-semibold text-sm">
+            <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <span className="text-gray-700 font-semibold">
               Zoom: {Math.round(scale * 100)}%
             </span>
           </div>
