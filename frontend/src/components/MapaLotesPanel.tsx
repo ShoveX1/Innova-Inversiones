@@ -31,7 +31,7 @@ export default function MapaLotesPanel() {
       try {
         setLoading(true);
         setError(null);
-        const res = await axios.get<Lote[]>(`${API_URL}/api/maps/lotes/fast/`);
+        const res = await axios.get<Lote[]>(`${API_URL}/api/maps/lotes/`);
         if (!cancel) setLotes(res.data);
       } catch (e: any) {
         if (!cancel) setError(e?.message ?? "Error al cargar lotes");

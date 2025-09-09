@@ -29,7 +29,7 @@ def lotes_estado(request):
         lotes_data = Lote.objects.select_related('estado').values(
             'codigo', 
             'manzana',
-            'lote__numero'
+            'lote_numero',
             'estado__id',
             'estado__nombre',
             'area_lote',
@@ -42,7 +42,7 @@ def lotes_estado(request):
             {
                 "codigo": lote['codigo'].lower(),
                 "manzana": str(lote['manzana']),
-                "lote_numero": (lote['lote__numero']),
+                "lote_numero": lote['lote_numero'],
                 "estado": str(lote['estado__id']),
                 "estado_nombre": lote['estado__nombre'],
                 "area_lote": float(lote['area_lote']),
@@ -63,53 +63,6 @@ def lotes_estado(request):
         
     except Exception as e:
         print(f"❌ Error en lotes_estado: {str(e)}")
-        return Response(
-            {"error": "Error interno del servidor"}, 
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
-@api_view(['GET'])
-def lotes_estado_fast(request):
-    """
-    Versión ultra-rápida usando consulta SQL directa para casos críticos.
-    """
-    try:
-        start_time = time.time()
-        
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT l.codigo, l.manzana, l.lote_numero, l.estado_id, e.nombre as estado_nombre, 
-                       l.area_lote, l.perimetro, l.precio
-                FROM database_lote l
-                JOIN database_estadolote e ON l.estado_id = e.id
-                ORDER BY l.codigo
-            """)
-            
-            data = [
-                {
-                    "codigo": row[0].lower(),
-                    "manzana": str(row[1]),
-                    "lote_numero": (row[2]),
-                    "estado": str(row[3]),
-                    "estado_nombre": row[4],
-                    "area_lote": float(row[5]),
-                    "perimetro": float(row[6]),
-                    "precio": float(row[7]) if row[7] else None
-                }
-                for row in cursor.fetchall()
-            ]
-        
-        end_time = time.time()
-        print(f"⚡ Lotes procesados (SQL directo) en {end_time - start_time:.3f} segundos")
-        
-        return Response(data)
-        
-    except Exception as e:
-        import traceback
-        print("❌ Error en lotes_estado_fast:")
-        print(str(e))
-        traceback.print_exc()
         return Response(
             {"error": "Error interno del servidor"}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
