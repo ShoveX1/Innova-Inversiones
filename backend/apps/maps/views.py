@@ -106,7 +106,10 @@ def lotes_estado_fast(request):
         return Response(data)
         
     except Exception as e:
-        print(f"❌ Error en lotes_estado_fast: {str(e)}")
+        import traceback
+        print("❌ Error en lotes_estado_fast:")
+        print(str(e))
+        traceback.print_exc()
         return Response(
             {"error": "Error interno del servidor"}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
