@@ -14,6 +14,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 import environ
+from urllib.parse import urlparse
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -103,6 +104,29 @@ WSGI_APPLICATION = 'innova_inversiones.wsgi.application'
 DATABASES = {
     'default': env.db(),  # lee DATABASE_URL del .env
 }
+
+# Ajustes adicionales para conexiones a Supabase (directo o pooler)
+db_url = env('DATABASE_URL', default='')
+if db_url:
+    parsed = urlparse(db_url)
+    is_pooler = (parsed.port == 6543) or (parsed.hostname and 'pooler' in parsed.hostname)
+
+    # Asegurar SSL en producción / entornos remotos
+    DATABASES['default'].setdefault('OPTIONS', {})
+    DATABASES['default']['OPTIONS']['sslmode'] = 'require'
+
+    # Health checks para conexiones reutilizadas
+    DATABASES['default']['CONN_HEALTH_CHECKS'] = True
+
+    if is_pooler:
+        # Recomendaciones para PgBouncer (pooler de Supabase)
+        # - Desactivar conexiones persistentes
+        # - Desactivar server-side cursors
+        DATABASES['default']['CONN_MAX_AGE'] = 0
+        DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
+    else:
+        # Conexión directa (5432) puede usar persistencia moderada
+        DATABASES['default'].setdefault('CONN_MAX_AGE', 600)
 
 
 # Password validation
