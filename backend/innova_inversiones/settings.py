@@ -191,7 +191,7 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "http://localhost:5173",
+    "http://localhost:4173",
     "http://127.0.0.1:5173",
     "https://innovainversiones.com",
     "https://innova-inversiones-kgcv.vercel.app",
@@ -205,7 +205,7 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,  # 5 minutos por defecto
+        'TIMEOUT': None,  # sin expiración por defecto (se invalida por tarea/cron)
         'OPTIONS': {
             'MAX_ENTRIES': 1000,
         }

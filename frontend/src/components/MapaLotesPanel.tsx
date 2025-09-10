@@ -1,10 +1,9 @@
 // src/components/MapaLotesPanel.tsx
 import { useEffect, useState, useMemo } from "react";
-import axios from "axios";
+import { api } from "../services/api";
 import MapaLotes from "./mapa_lotes";        // tu SVG existente (ver snippet abajo)
 import InfoPanel from "./info_panel";        // el panel
-// Ajusta la URL según tu backend (DRF)
-const API_URL = import.meta.env?.VITE_API_URL;
+// La URL base se toma desde services/api.ts (VITE_API_BASE_URL)
 
 export interface Lote {
   codigo: string;
@@ -31,8 +30,8 @@ export default function MapaLotesPanel() {
       try {
         setLoading(true);
         setError(null);
-        const res = await axios.get<Lote[]>(`${API_URL}/api/maps/lotes/`);
-        if (!cancel) setLotes(res.data);
+        const data = await api.get('api/maps/lotes/');
+        if (!cancel) setLotes(data as Lote[]);
       } catch (e: any) {
         if (!cancel) setError(e?.message ?? "Error al cargar lotes");
       } finally {

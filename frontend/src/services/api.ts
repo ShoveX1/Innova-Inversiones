@@ -1,9 +1,12 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const api = {
   // Método genérico para requests
   request: async (endpoint: string, options: RequestInit = {}) => {
-    const url = `${API_BASE_URL}${endpoint}`;
+    // Normalizar base y endpoint para evitar // o /api/api
+    const base = String(API_URL || '').replace(/\/+$/, '');
+    const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${base}${path}`;
     const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
