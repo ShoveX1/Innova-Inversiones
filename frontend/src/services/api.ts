@@ -8,10 +8,13 @@ export const api = {
     const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = `${base}${path}`;
     const response = await fetch(url, {
+      // Forzar no usar caché del navegador; siempre traer datos frescos
+      cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
       },
+      // Spread al final para permitir overrides explícitos en llamadas puntuales
       ...options,
     });
 

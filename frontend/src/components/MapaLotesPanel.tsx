@@ -1,5 +1,5 @@
 // src/components/MapaLotesPanel.tsx
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { api } from "../services/api";
 import MapaLotes from "./mapa_lotes";        // tu SVG existente (ver snippet abajo)
 import InfoPanel from "./info_panel";        // el panel
@@ -23,23 +23,48 @@ export default function MapaLotesPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCodigo, setSelectedCodigo] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
 
-  useEffect(() => {
-    let cancel = false;
-    (async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await api.get('api/maps/lotes/');
-        if (!cancel) setLotes(data as Lote[]);
-      } catch (e: any) {
-        if (!cancel) setError(e?.message ?? "Error al cargar lotes");
-      } finally {
-        if (!cancel) setLoading(false);
-      }
-    })();
-    return () => { cancel = true; };
+  const fetchLotes = useCallback(async () => {
+    try {
+      setError(null);
+      const data = await api.get('api/maps/lotes/');
+      if (!isMountedRef.current) return;
+      setLotes(data as Lote[]);
+    } catch (e: any) {
+      if (!isMountedRef.current) return;
+      setError(e?.message ?? "Error al cargar lotes");
+    } finally {
+      if (!isMountedRef.current) return;
+      setLoading(false);
+    }
   }, []);
+
+  // Carga inicial
+  useEffect(() => {
+    isMountedRef.current = true;
+    setLoading(true);
+    fetchLotes();
+    return () => { isMountedRef.current = false; };
+  }, [fetchLotes]);
+
+  // Revalidación: al volver a foco/visibilidad
+  useEffect(() => {
+    const onFocus = () => fetchLotes();
+    const onVisible = () => { if (document.visibilityState === 'visible') fetchLotes(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [fetchLotes]);
+
+  // Polling ligero (p. ej., cada 30s) — opcional; ajustar según necesidad
+  useEffect(() => {
+    const interval = window.setInterval(fetchLotes, 30000);
+    return () => window.clearInterval(interval);
+  }, [fetchLotes]);
 
   const selectedLote = useMemo(
     () => lotes.find(l => l.codigo === selectedCodigo) ?? null,
