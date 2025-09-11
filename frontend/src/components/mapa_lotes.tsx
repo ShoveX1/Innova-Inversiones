@@ -33,6 +33,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
   const [isPanning, setIsPanning] = useState(false);
   const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
   const pinchLastDistanceRef = useRef<number | null>(null);
+  const tapStartRef = useRef<{ x: number; y: number; t: number; target: Element | null } | null>(null);
   const panFrameRef = useRef<number | null>(null);
   const isPanningRef = useRef(false);
   const scaleRef = useRef(1);
@@ -60,12 +61,15 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
   useEffect(() => {
     setSelectedLote(selectedCodigo);
   }, [selectedCodigo]);
+  const selectCodigo = useCallback((codigo: string) => {
+    setSelectedLote(codigo);
+    onSelectCodigo(codigo);
+  }, [onSelectCodigo]);
+
   const handleClick = (e: React.MouseEvent<SVGPathElement>) => {
     const codigo = (e.currentTarget as SVGPathElement).dataset.codigo;
     if (codigo) {
-      // Actualizar el lote seleccionado
-      setSelectedLote(codigo);
-      onSelectCodigo(codigo);
+      selectCodigo(codigo);
     }
   };
 
@@ -194,11 +198,54 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
         el.setAttribute('cursor', 'pointer');
         (el as SVGElement).style.transition = 'stroke 0.2s ease-in-out';
 
-        // Eventos de click (solo agregar una vez)
+        // Eventos de click/tap (solo agregar una vez)
         el.setAttribute('data-codigo', lote.codigo);
         if (!el.hasAttribute('data-click-attached')) {
           el.addEventListener('click', (e) => handleClick(e as any));
           el.setAttribute('data-click-attached', 'true');
+        }
+
+        // Soporte táctil: detectar "tap" sin pan/zoom
+        if (!el.hasAttribute('data-touch-attached')) {
+          const onTouchStart = (ev: TouchEvent) => {
+            if (ev.touches.length !== 1) return;
+            // Evitar que el contenedor inicie pan para un tap
+            ev.preventDefault();
+            ev.stopPropagation();
+            const t = ev.touches[0];
+            tapStartRef.current = { x: t.clientX, y: t.clientY, t: Date.now(), target: ev.currentTarget as Element };
+          };
+          const onTouchMove = (ev: TouchEvent) => {
+            if (!tapStartRef.current || ev.touches.length !== 1) return;
+            const t = ev.touches[0];
+            const dx = Math.abs(t.clientX - tapStartRef.current.x);
+            const dy = Math.abs(t.clientY - tapStartRef.current.y);
+            // Si se mueve demasiado, cancelar tap para permitir pan
+            if (dx > 10 || dy > 10) {
+              tapStartRef.current = null;
+            }
+          };
+          const onTouchEnd = (ev: TouchEvent) => {
+            const start = tapStartRef.current;
+            tapStartRef.current = null;
+            if (!start) return;
+            ev.preventDefault();
+            ev.stopPropagation();
+            // Si se estaba haciendo pinch, no seleccionar
+            if (pinchLastDistanceRef.current != null) return;
+            const dt = Date.now() - start.t;
+            if (dt <= 500) {
+              const targetEl = (start.target as Element) ?? (ev.currentTarget as Element);
+              const codigo = targetEl.getAttribute('data-codigo') || targetEl.id;
+              if (codigo) {
+                selectCodigo(codigo);
+              }
+            }
+          };
+          el.addEventListener('touchstart', onTouchStart as any, { passive: false } as any);
+          el.addEventListener('touchmove', onTouchMove as any, { passive: false } as any);
+          el.addEventListener('touchend', onTouchEnd as any);
+          el.setAttribute('data-touch-attached', 'true');
         }
         
         // Eventos de hover (overlay por encima, respetando selección y solo una vez)
@@ -618,7 +665,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     };
   }, [svgLoaded, scheduleWheelZoom, isPanning, clampPan, containerSize, setSvgViewBox, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
-  return (
+  return (  
     <div className="relative">
       {loading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
