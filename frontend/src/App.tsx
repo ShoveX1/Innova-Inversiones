@@ -1,6 +1,6 @@
 
 import './App.css'
-import MapaLotesPanel from './components/MapaLotesPanel.tsx'
+import MapaPage from './pages/mapa_page.tsx'
 import Header from './components/Header.tsx'
 import PingPage from './pages/PingPage.tsx'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
@@ -13,13 +13,9 @@ function App() {
         <header>
           <Header />
         </header>
-        <main className="flex-1 flex">
+        <main className="flex-1 flex min-h-0">
           <Routes>
-            <Route path="/" element={
-              <div className="flex-1">
-                <MapaLotesPanel />
-              </div>
-            } />
+            <Route path="/" element={<MapaPage />} />
             <Route path="/ping" element={<PingPage />} />
           </Routes>
         </main>
