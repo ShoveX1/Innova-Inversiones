@@ -1,4 +1,6 @@
 // src/components/info_panel.tsx
+import { useState, useRef, useEffect } from 'react';
+
 type Props = {
   loading?: boolean;
   error?: string | null;
@@ -18,119 +20,180 @@ type Props = {
 const currency = new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" });
 
 function estadoBadge(estado: string, estadoNombre: string) {
-  const map: Record<string, { bg: string; text: string; label: string }> = {
-    "1": { bg: "bg-green-100", text: "text-green-700", label: "Disponible" },
-    "2": { bg: "bg-yellow-100", text: "text-yellow-800", label: "Reservado" },
-    "3": { bg: "bg-red-100", text: "text-red-700", label: "Vendido" },
-    // Mostrar estado 4 como "Vendido" para usuarios no gerenciales
-    "4": { bg: "bg-red-100", text: "text-red-700", label: "Vendido" },
+  const map: Record<string, { bg: string; text: string; label: string; emoji: string }> = {
+    "1": { bg: "bg-green-100", text: "text-green-700", label: "Disponible", emoji: "🟢" },
+    "2": { bg: "bg-yellow-100", text: "text-yellow-800", label: "Reservado", emoji: "🟡" },
+    "3": { bg: "bg-red-100", text: "text-red-700", label: "Vendido", emoji: "🔴" },
+    "4": { bg: "bg-red-100", text: "text-red-700", label: "Vendido", emoji: "🔴" },
   };
-  const cls = map[estado] ?? { bg: "bg-gray-100", text: "text-gray-700", label: estadoNombre || "—" };
+  const cls = map[estado] ?? { bg: "bg-gray-100", text: "text-gray-700", label: estadoNombre || "—", emoji: "⚪" };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${cls.bg} ${cls.text}`}>
+    <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${cls.bg} ${cls.text}`}>
+      <span className="mr-1">{cls.emoji}</span>
       {cls.label}
-    </span>
+    </div>
   );
 }
 
 export default function InfoPanel({ loading, error, lote, onClose }: Props) {
-  const titleId = "info-panel-title";
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [position, setPosition] = useState({ x: 20, y: 20 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Función para manejar el arrastre
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.target === panelRef.current || (e.target as HTMLElement).closest('[data-drag-handle]')) {
+      setIsDragging(true);
+      setDragStart({
+        x: e.clientX - position.x,
+        y: e.clientY - position.y
+      });
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+    
+    // Limitar el panel dentro de la ventana
+    const maxX = window.innerWidth - 320; // 320px es el ancho del panel
+    const maxY = window.innerHeight - (isMinimized ? 60 : 200); // altura variable
+    
+    setPosition({
+      x: Math.max(0, Math.min(newX, maxX)),
+      y: Math.max(0, Math.min(newY, maxY))
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Event listeners para el arrastre
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragStart]);
+
+  // Si no hay lote seleccionado, no mostrar el panel
+  if (!lote && !loading && !error) {
+    return null;
+  }
 
   return (
-    <aside
-      className="w-full h-full bg-white text-gray-900 border-gray-200 flex flex-col"
-      role="region"
-      aria-labelledby={titleId}
+    <div
+      ref={panelRef}
+      className={`fixed z-50 transition-all duration-300 ease-out ${
+        isDragging ? 'cursor-grabbing' : 'cursor-grab'
+      }`}
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        width: '300px'
+      }}
+      onMouseDown={handleMouseDown}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white/60 backdrop-blur-sm sticky top-0 z-10">
-        <div className="min-w-0">
-          <h2 id={titleId} className="m-0 text-base md:text-lg font-semibold truncate">Innova Inversiones</h2>
-          <p className="m-0 text-xs text-gray-500 mt-0.5 truncate">
-            {lote ? `Lote ${lote.manzana}-${lote.lote_numero}` : "Selecciona un lote en el mapa"}
-          </p>
-        </div>
-        <button
-          onClick={onClose}
-          className="inline-flex items-center justify-center h-9 px-3 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors"
-          aria-label="Cerrar panel"
+      <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl shadow-2xl overflow-hidden">
+        {/* Header arrastrable */}
+        <div 
+          data-drag-handle
+          className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white cursor-grab hover:from-blue-700 hover:to-blue-800 transition-colors"
         >
-          Cerrar
-        </button>
-      </div>
-
-      {/* Body */}
-      <div className="p-4 flex-1 overflow-auto">
-        {loading && (
-          <div role="status" aria-live="polite" aria-busy="true" className="space-y-4">
-            <div className="animate-pulse space-y-3">
-              <div className="h-3 bg-gray-200 rounded w-1/3" />
-              <div className="h-3 bg-gray-200 rounded w-1/2" />
-            </div>
-            <div className="grid grid-cols-2 gap-3 animate-pulse">
-              <div className="h-16 bg-gray-200 rounded-lg" />
-              <div className="h-16 bg-gray-200 rounded-lg" />
-              <div className="h-16 bg-gray-200 rounded-lg col-span-2" />
+          <div className="flex items-center space-x-2">
+            <span className="text-lg">🏠</span>
+            <div>
+              <h3 className="text-sm font-semibold truncate">Innova Inversiones</h3>
+              {lote && (
+                <p className="text-xs text-blue-100 truncate">
+                  Lote {lote.manzana}-{lote.lote_numero}
+                </p>
+              )}
             </div>
           </div>
-        )}
-
-        {error && (
-          <div role="alert" className="flex items-start gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-            <span aria-hidden>⚠️</span>
-            <span className="flex-1">Error: {error}</span>
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={() => setIsMinimized(!isMinimized)}
+              className="p-1 hover:bg-white/20 rounded transition-colors"
+              aria-label={isMinimized ? "Expandir" : "Minimizar"}
+            >
+              {isMinimized ? '📈' : '📉'}
+            </button>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="p-1 hover:bg-white/20 rounded transition-colors"
+                aria-label="Cerrar panel"
+              >
+                ✕
+              </button>
+            )}
           </div>
-        )}
+        </div>
 
-        {!loading && !error && !lote && (
-          <div className="text-center text-gray-600">
-            <div className="mx-auto mb-2 text-2xl" aria-hidden>🗺️</div>
-            <p className="text-sm">Selecciona un lote en el mapa para ver los detalles.</p>
-          </div>
-        )}
-
-        {!loading && !error && lote && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm text-gray-500">Estado</div>
-                <div className="mt-1">{estadoBadge(lote.estado, lote.estado_nombre)}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-gray-500">Área (m²)</div>
-                <div className="text-sm font-medium text-gray-800">{lote.area_lote}</div>
-              </div>
-            </div>
-
-            {/* Mostrar el precio arriba en móvil para que no se oculte */}
-            {lote.estado === "1" && (
-              <div className="rounded-lg border border-gray-200 p-3 bg-white">
-                <div className="text-xs text-gray-500">Precio total</div>
-                <div className="text-lg font-semibold text-gray-900">
-                  {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}
-                </div>
-                {lote.precio_metro_cuadrado != null && (
-                  <div className="mt-1 text-xs text-gray-500">
-                    {currency.format(Number(lote.precio_metro_cuadrado))} / m²
-                  </div>
-                )}
+        {/* Contenido del panel */}
+        {!isMinimized && (
+          <div className="p-4 space-y-3">
+            {loading && (
+              <div className="animate-pulse space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-3/4" />
+                <div className="h-4 bg-gray-200 rounded w-1/2" />
+                <div className="h-8 bg-gray-200 rounded" />
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-lg border border-gray-200 p-3 bg-white">
-                <div className="text-xs text-gray-500">Manzana</div>
-                <div className="font-medium">{lote.manzana}</div>
+            {error && (
+              <div className="flex items-start gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                <span>⚠️</span>
+                <span className="flex-1">Error: {error}</span>
               </div>
-              <div className="rounded-lg border border-gray-200 p-3 bg-white">
-                <div className="text-xs text-gray-500">Lote</div>
-                <div className="font-medium">{lote.lote_numero}</div>
-              </div>
-              
-            </div>
+            )}
+
+            {!loading && !error && lote && (
+              <>
+                {/* Estado y área en una línea */}
+                <div className="flex items-center justify-between">
+                  {estadoBadge(lote.estado, lote.estado_nombre)}
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500">Área</div>
+                    <div className="text-sm font-semibold text-gray-800">{lote.area_lote} m²</div>
+                  </div>
+                </div>
+
+                {/* Precio destacado */}
+                {lote.estado === "1" && (
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3">
+                    <div className="text-xs text-green-600 font-medium">💰 Precio total</div>
+                    <div className="text-lg font-bold text-green-800">
+                      {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}
+                    </div>
+                    {lote.precio_metro_cuadrado != null && (
+                      <div className="text-xs text-green-600">
+                        {currency.format(Number(lote.precio_metro_cuadrado))} / m²
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Ubicación compacta */}
+                <div className="flex items-center justify-center space-x-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
+                  <span>📍</span>
+                  <span className="font-medium">M-{lote.manzana} • Lote {lote.lote_numero}</span>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
-    </aside>
+    </div>
   );
 }
