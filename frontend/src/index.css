@@ -31,8 +31,9 @@ a:hover {
 body {
   margin: 0;
   padding: 0;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  min-width: 100vw;
+  overflow: auto;
   background: rgb(241, 245, 249);
 }
 

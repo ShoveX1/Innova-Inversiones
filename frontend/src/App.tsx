@@ -2,7 +2,6 @@
 import './App.css'
 import MapaPage from './pages/mapa_page.tsx'
 import Header from './components/Header.tsx'
-import PingPage from './pages/PingPage.tsx'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 function App() {
@@ -16,7 +15,6 @@ function App() {
         <main className="flex-1 flex min-h-0">
           <Routes>
             <Route path="/" element={<MapaPage />} />
-            <Route path="/ping" element={<PingPage />} />
           </Routes>
         </main>
       </div>
