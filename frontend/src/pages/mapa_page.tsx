@@ -78,13 +78,17 @@ export default function MapaPage() {
         />
       </div>
 
-      {/* Panel flotante superpuesto */}
-      <InfoPanel
-        loading={loading}
-        error={error}
-        lote={selectedLote}
-        onClose={() => setSelectedCodigo(null)}
-      />
+      {/* Panel flotante que aparece solo cuando hay lote seleccionado */}
+      {selectedLote && (
+        <div className="absolute top-1/4 left-0 w-80 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-8rem)] z-30 bg-white rounded-r-xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden">
+          <InfoPanel
+            loading={loading}
+            error={error}
+            lote={selectedLote}
+            onClose={() => setSelectedCodigo(null)}
+          />
+        </div>
+      )}
     </div>
   );
 }
