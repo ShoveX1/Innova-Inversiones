@@ -66,8 +66,9 @@ export default function MapaPage() {
   );
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col md:flex-row">
-      <div className="order-1 md:order-2 w-full md:w-4/5 h-[50vh] md:h-full min-h-0">
+    <div className="flex min-h-0 w-full md:w-[75%] h-[90vh] relative mx-auto overflow-hidden">
+      {/* Mapa ocupa toda la pantalla */}
+      <div className="w-full h-full min-h-0 overflow-hidden">
         <MapaLotes  
           lotes={lotes}
           loading={loading}
@@ -77,14 +78,26 @@ export default function MapaPage() {
         />
       </div>
 
-      <div className="order-2 md:order-1 w-full md:w-1/5 h-[50vh] md:h-full md:max-h-none border-t md:border-t-0 md:border-r border-gray-200 bg-zinc-50 flex flex-col min-h-0 overflow-hidden">
-        <InfoPanel
-          loading={loading}
-          error={error}
-          lote={selectedLote}
-          onClose={() => setSelectedCodigo(null)}
-        />
-      </div>
+      {/* Panel flotante que aparece solo cuando hay lote seleccionado */}
+      {selectedLote && (
+        <div className="
+          absolute 
+          bottom-0 left-0 
+          sm:top-0 sm:bottom-auto sm:w-80 sm:rounded-r-xl
+          md:top-1/4
+          w-full
+          z-30 
+          bg-white shadow-2xl border border-gray-200 
+          flex flex-col overflow-hidden
+        ">
+          <InfoPanel
+            loading={loading}
+            error={error}
+            lote={selectedLote}
+            onClose={() => setSelectedCodigo(null)}
+          />
+        </div>
+      )}
     </div>
   );
 }

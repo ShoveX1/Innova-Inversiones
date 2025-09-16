@@ -209,9 +209,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
         if (!el.hasAttribute('data-touch-attached')) {
           const onTouchStart = (ev: TouchEvent) => {
             if (ev.touches.length !== 1) return;
-            // Evitar que el contenedor inicie pan para un tap
-            ev.preventDefault();
-            ev.stopPropagation();
+            // No prevenir por defecto inicialmente - permitir que el pan funcione si se mueve
             const t = ev.touches[0];
             tapStartRef.current = { x: t.clientX, y: t.clientY, t: Date.now(), target: ev.currentTarget as Element };
           };
@@ -221,20 +219,25 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
             const dx = Math.abs(t.clientX - tapStartRef.current.x);
             const dy = Math.abs(t.clientY - tapStartRef.current.y);
             // Si se mueve demasiado, cancelar tap para permitir pan
-            if (dx > 10 || dy > 10) {
+            if (dx > 8 || dy > 8) {
               tapStartRef.current = null;
+              // Permitir que el evento se propague para el pan del mapa
+              ev.stopPropagation();
             }
           };
           const onTouchEnd = (ev: TouchEvent) => {
             const start = tapStartRef.current;
             tapStartRef.current = null;
             if (!start) return;
-            ev.preventDefault();
-            ev.stopPropagation();
+            
             // Si se estaba haciendo pinch, no seleccionar
             if (pinchLastDistanceRef.current != null) return;
+            
             const dt = Date.now() - start.t;
             if (dt <= 500) {
+              // Solo prevenir por defecto si fue un tap válido (sin movimiento significativo)
+              ev.preventDefault();
+              ev.stopPropagation();
               const targetEl = (start.target as Element) ?? (ev.currentTarget as Element);
               const codigo = targetEl.getAttribute('data-codigo') || targetEl.id;
               if (codigo) {
@@ -473,7 +476,8 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       setIsPanning(false);
       lastPointerRef.current = null;
     } else if (e.touches.length === 1) {
-      e.preventDefault();
+      // No prevenir por defecto inmediatamente para permitir que el pan funcione
+      // desde cualquier punto, incluyendo lotes
       const t = e.touches[0];
       lastPointerRef.current = { x: t.clientX, y: t.clientY };
       setIsPanning(true);
@@ -692,7 +696,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       
       <div 
         ref={containerRef}
-        className="flex items-center justify-center h-full w-full overflow-hidden relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-inner border border-gray-200 select-none overscroll-none"
+        className="flex items-center justify-center h-full w-full overflow-hidden relative bg-gradient-to-br from-gray-50 to-gray-100 shadow-inner select-none overscroll-none"
         onWheel={handleWheel}
         onDoubleClick={handleDoubleClick}
         onMouseDown={handleMouseDown}
@@ -740,16 +744,16 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
           </div>
         </div>
         
-        <div className="relative" style={{ touchAction: 'none', width: '100%', height: '100%' }}>
+        <div className="relative w-full h-full" style={{ touchAction: 'none' }}>
           <object
             ref={objectRef}
             type="image/svg+xml"
             data={`${import.meta.env.BASE_URL}planovirtual-1_edit_ids.svg`}
-            className="max-w-full max-h-full w-auto h-auto"
+            className="w-full h-full object-contain"
             onLoad={handleSvgLoad}
           />
           {/* Efecto de brillo sutil */}
-          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-100/20 pointer-events-none rounded-lg"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-100/20 pointer-events-none rounded-xl"></div>
         </div>
       </div>
     </div>
