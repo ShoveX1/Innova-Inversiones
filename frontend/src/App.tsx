@@ -12,7 +12,7 @@ function App() {
         <header>
           <Header />
         </header>
-        <main className="flex-1 flex min-h-0">
+        <main className="flex-1 flex min-h-0 min-w-0">
           <Routes>
             <Route path="/" element={<MapaPage />} />
           </Routes>
