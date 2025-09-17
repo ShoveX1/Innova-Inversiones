@@ -1,4 +1,5 @@
 // src/components/info_panel.tsx
+import { useEffect, useState } from 'react';
 type Props = {
   loading?: boolean;
   error?: string | null;
@@ -34,6 +35,57 @@ function estadoBadge(estado: string, estadoNombre: string) {
 }
 
 export default function InfoPanel({ loading, error, lote, onClose }: Props) {
+  // Estado de arrastre
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 16, y: 80 });
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  const onMouseDownRoot = (e: React.MouseEvent) => {
+    if (isMobile) return; // En móvil no es movible
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-drag-handle]')) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+    }
+  };
+
+  const onMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    const nextX = e.clientX - dragStart.x;
+    const nextY = e.clientY - dragStart.y;
+    const panelWidth = 320;
+    const panelHeight = 260; // aproximado
+    const margin = 8;
+    const maxX = Math.max(margin, window.innerWidth - panelWidth - margin);
+    const maxY = Math.max(margin, window.innerHeight - panelHeight - margin);
+    setPosition({
+      x: Math.max(margin, Math.min(nextX, maxX)),
+      y: Math.max(margin, Math.min(nextY, maxY)),
+    });
+  };
+
+  const onMouseUp = () => setIsDragging(false);
+
+  // Suscribirse a eventos mientras se arrastra
+  // @ts-ignore
+  useEffect(() => {
+    if (!isDragging) return;
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [isDragging, dragStart]);
+
+  // Detectar móvil (sm breakpoint ~ 640px)
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth < 640);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   // Si no hay lote seleccionado, no mostrar el panel
   if (!lote && !loading && !error) {
@@ -41,17 +93,33 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
   }
 
   return (
-    <div className="w-full flex flex-col">
+    <div
+      className="fixed z-50"
+      style={
+        isMobile
+          ? {
+              left: 16,
+              right: 16,
+              bottom: 16,
+              width: 'auto',
+            }
+          : {
+              left: position.x,
+              top: position.y,
+              width: 320,
+            }
+      }
+      onMouseDown={onMouseDownRoot}
+    >
       <div className="
         bg-white/95 backdrop-blur-sm 
-        border border-gray-200 
-        sm:rounded-r-xl 
+        border border-gray-200 rounded-xl
         shadow-2xl 
         overflow-hidden 
         flex flex-col
       ">
         {/* Header fijo */}
-        <div className="
+        <div data-drag-handle className="
           flex items-center justify-between 
           px-3 py-2 sm:px-4 sm:py-3 
           bg-gradient-to-r from-blue-600 to-blue-700 
@@ -60,7 +128,7 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
           <div className="flex items-center space-x-2">
             <span className="text-lg">🏠</span>
             <div>
-              <h3 className="text-xs sm:text-sm font-semibold truncate">Innova Inversiones</h3>
+              <h3 className="text-xs sm:text-sm font-semibold truncate">Las Bugambilias-1RA ETAPA</h3>
               {lote && (
                 <p className="text-xs text-blue-100 truncate">
                   Lote {lote.manzana}-{lote.lote_numero}

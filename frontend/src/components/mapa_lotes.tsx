@@ -75,27 +75,33 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
 
   // Funciones para manejar el zoom con botones
   const handleZoomIn = () => {
-    setScale(prevScale => {
-      const newScale = prevScale + 0.2;
-      return Math.max(0.5, Math.min(3, newScale)); // Límites: 0.5x a 3x
-    });
+    const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
+    const factor = 1.2;
+    const newW = current.w / factor;
+    const newH = current.h / factor;
+    const newX = current.x + (current.w - newW) / 2;
+    const newY = current.y + (current.h - newH) / 2;
+    setSvgViewBox({ x: newX, y: newY, w: newW, h: newH });
+    setScale(scale * factor);
   };
 
   const handleZoomOut = () => {
-    setScale(prevScale => {
-      const newScale = prevScale - 0.2;
-      return Math.max(0.5, Math.min(3, newScale)); // Límites: 0.5x a 3x
-    });
+    const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
+    const factor = 1 / 1.2;
+    const newW = current.w / factor;
+    const newH = current.h / factor;
+    const newX = current.x + (current.w - newW) / 2;
+    const newY = current.y + (current.h - newH) / 2;
+    setSvgViewBox({ x: newX, y: newY, w: newW, h: newH });
+    setScale(scale * factor);
   };
 
   const handleResetZoom = () => {
     const base = baseViewBoxRef.current;
     if (base.w > 0 && base.h > 0) {
       setSvgViewBox(base);
+      setScale(1);
     }
-    setScale(1);
-    setTranslateX(0);
-    setTranslateY(0);
   };
 
   // Doble clic: acercar (o alejar con Shift)
@@ -710,24 +716,107 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
         style={{ cursor: isPanning ? 'grabbing' : scale > 1 ? 'grab' : 'default', touchAction: 'none' }}
       >
         {/* Controles de zoom */}
-        <div className="absolute bottom-3 right-3 md:top-6 md:right-6 md:bottom-auto bg-white/80 md:bg-white/95 backdrop-blur-sm shadow-xl rounded-xl p-2 md:p-3 z-20 flex flex-col gap-2 md:gap-3 border border-gray-200 opacity-90 md:opacity-100 hover:opacity-100">
+        <div className="
+          absolute 
+          bottom-2 right-2 
+          sm:bottom-3 sm:right-3 
+          md:top-6 md:right-6 md:bottom-auto 
+          bg-white/70 
+          sm:bg-white/80 
+          md:bg-white/95 
+          backdrop-blur-sm 
+          shadow-lg 
+          sm:shadow-xl 
+          rounded-lg 
+          sm:rounded-xl 
+          p-1.5 
+          sm:p-2 
+          md:p-3 
+          z-20 
+          flex flex-col 
+          gap-1 
+          sm:gap-2 
+          md:gap-3 
+          border border-gray-200 
+          opacity-80 
+          sm:opacity-90 
+          md:opacity-100 
+          hover:opacity-100
+        ">
           <button
             onClick={handleZoomIn}
-            className="w-9 h-9 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-bold text-base md:text-lg"
+            className="
+              w-7 h-7 
+              sm:w-9 sm:h-9 
+              md:w-12 md:h-12 
+              bg-gradient-to-br from-blue-500 to-blue-600 
+              text-white 
+              rounded-md 
+              sm:rounded-lg 
+              hover:from-blue-600 hover:to-blue-700 
+              transition-all duration-200 
+              flex items-center justify-center 
+              shadow-sm 
+              sm:shadow-md 
+              hover:shadow-lg 
+              transform hover:scale-105 active:scale-95 
+              font-bold 
+              text-sm 
+              sm:text-base 
+              md:text-lg
+            "
             title="Acercar"
           >
             +
           </button>
           <button
             onClick={handleZoomOut}
-            className="w-9 h-9 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-bold text-base md:text-lg"
+            className="
+              w-7 h-7 
+              sm:w-9 sm:h-9 
+              md:w-12 md:h-12 
+              bg-gradient-to-br from-blue-500 to-blue-600 
+              text-white 
+              rounded-md 
+              sm:rounded-lg 
+              hover:from-blue-600 hover:to-blue-700 
+              transition-all duration-200 
+              flex items-center justify-center 
+              shadow-sm 
+              sm:shadow-md 
+              hover:shadow-lg 
+              transform hover:scale-105 active:scale-95 
+              font-bold 
+              text-sm 
+              sm:text-base 
+              md:text-lg
+            "
             title="Alejar"
           >
             −
           </button>
           <button
             onClick={handleResetZoom}
-            className="w-9 h-9 md:w-12 md:h-12 bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 text-xs md:text-sm font-bold"
+            className="
+              w-7 h-7 
+              sm:w-9 sm:h-9 
+              md:w-12 md:h-12 
+              bg-gradient-to-br from-gray-500 to-gray-600 
+              text-white 
+              rounded-md 
+              sm:rounded-lg 
+              hover:from-gray-600 hover:to-gray-700 
+              transition-all duration-200 
+              flex items-center justify-center 
+              shadow-sm 
+              sm:shadow-md 
+              hover:shadow-lg 
+              transform hover:scale-105 active:scale-95 
+              text-xs 
+              sm:text-xs 
+              md:text-sm 
+              font-bold
+            "
             title="Zoom Original"
           >
             ⌂
@@ -735,11 +824,35 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
         </div>
 
         {/* Indicador de zoom (discreto en móvil) */}
-        <div className="absolute left-3 bottom-3 md:top-6 md:left-6 md:bottom-auto bg-white/70 md:bg-white/95 backdrop-blur-sm shadow-xl rounded-xl px-2 py-1 md:px-4 md:py-2 z-20 border border-gray-200 text-xs md:text-sm opacity-90 md:opacity-100">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-blue-500 rounded-full animate-pulse"></div>
+        <div className="
+          absolute 
+          left-2 bottom-2 
+          sm:left-3 sm:bottom-3 
+          md:top-6 md:left-6 md:bottom-auto 
+          bg-white/60 
+          sm:bg-white/70 
+          md:bg-white/95 
+          backdrop-blur-sm 
+          shadow-md 
+          sm:shadow-xl 
+          rounded-md 
+          sm:rounded-xl 
+          px-1.5 py-1 
+          sm:px-2 sm:py-1 
+          md:px-4 md:py-2 
+          z-20 
+          border border-gray-200 
+          text-xs 
+          sm:text-xs 
+          md:text-sm 
+          opacity-70 
+          sm:opacity-90 
+          md:opacity-100
+        ">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 md:w-2 md:h-2 bg-blue-500 rounded-full animate-pulse"></div>
             <span className="text-gray-700 font-semibold">
-              Zoom: {Math.round(scale * 100)}%
+              {Math.round(scale * 100)}%
             </span>
           </div>
         </div>
