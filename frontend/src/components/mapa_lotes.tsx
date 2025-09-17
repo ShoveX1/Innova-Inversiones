@@ -77,23 +77,35 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
   const handleZoomIn = () => {
     const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
     const factor = 1.2;
+    const currentScale = scaleRef.current;
+    const newScale = currentScale * factor;
+    
+    // Límite máximo: 500% (5x)
+    if (newScale > 5) return;
+    
     const newW = current.w / factor;
     const newH = current.h / factor;
     const newX = current.x + (current.w - newW) / 2;
     const newY = current.y + (current.h - newH) / 2;
     setSvgViewBox({ x: newX, y: newY, w: newW, h: newH });
-    setScale(scale * factor);
+    setScale(newScale);
   };
 
   const handleZoomOut = () => {
     const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
     const factor = 1 / 1.2;
+    const currentScale = scaleRef.current;
+    const newScale = currentScale * factor;
+    
+    // Límite mínimo: 100% (1x)
+    if (newScale < 1) return;
+    
     const newW = current.w / factor;
     const newH = current.h / factor;
     const newX = current.x + (current.w - newW) / 2;
     const newY = current.y + (current.h - newH) / 2;
     setSvgViewBox({ x: newX, y: newY, w: newW, h: newH });
-    setScale(scale * factor);
+    setScale(newScale);
   };
 
   const handleResetZoom = () => {
@@ -115,8 +127,8 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     const svgPt = pt.matrixTransform(svgEl.getScreenCTM()?.inverse() || (new DOMMatrix()));
 
     const factor = e.shiftKey ? 1 / 1.2 : 1.2;
-    const minScale = 0.5;
-    const maxScale = 3;
+    const minScale = 1; // 100% mínimo
+    const maxScale = 5; // 500% máximo
     const nextScale = Math.max(minScale, Math.min(maxScale, scaleRef.current * factor));
     const base = baseViewBoxRef.current;
     const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : base;
@@ -147,8 +159,8 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
 
       const zoomIntensity = 0.0015;
       const zoomFactor = Math.exp(-data.deltaY * zoomIntensity);
-      const minScale = 0.5;
-      const maxScale = 3;
+      const minScale = 1; // 100% mínimo
+      const maxScale = 5; // 500% máximo
       const nextScale = Math.max(minScale, Math.min(maxScale, scaleRef.current * zoomFactor));
       const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
       const zoomRatio = scaleRef.current / nextScale;
@@ -502,8 +514,8 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       const midpoint = { x: (points[0].x + points[1].x) / 2, y: (points[0].y + points[1].y) / 2 };
 
       const factor = distance / (lastDistance || distance);
-      const minScale = 0.5;
-      const maxScale = 3;
+      const minScale = 1; // 100% mínimo
+      const maxScale = 5; // 500% máximo
       const nextScaleUnclamped = scale * factor;
       const nextScale = Math.max(minScale, Math.min(maxScale, nextScaleUnclamped));
       const k = nextScale / scale;
@@ -606,8 +618,8 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       const cursorX = ev.clientX - rect.left;
       const cursorY = ev.clientY - rect.top;
       const factor = (ev as MouseEvent & { shiftKey?: boolean }).shiftKey ? 1 / 1.2 : 1.2;
-      const minScale = 0.5;
-      const maxScale = 3;
+      const minScale = 1; // 100% mínimo
+      const maxScale = 5; // 500% máximo
       const nextScaleUnclamped = scale * factor;
       const nextScale = Math.max(minScale, Math.min(maxScale, nextScaleUnclamped));
       const k = nextScale / scale;
@@ -745,53 +757,57 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
         ">
           <button
             onClick={handleZoomIn}
-            className="
+            disabled={scale >= 5}
+            className={`
               w-7 h-7 
               sm:w-9 sm:h-9 
               md:w-12 md:h-12 
-              bg-gradient-to-br from-blue-500 to-blue-600 
+              ${scale >= 5 
+                ? 'bg-gradient-to-br from-gray-300 to-gray-400 cursor-not-allowed' 
+                : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
+              }
               text-white 
               rounded-md 
               sm:rounded-lg 
-              hover:from-blue-600 hover:to-blue-700 
               transition-all duration-200 
               flex items-center justify-center 
               shadow-sm 
               sm:shadow-md 
-              hover:shadow-lg 
-              transform hover:scale-105 active:scale-95 
+              ${scale < 5 ? 'hover:shadow-lg transform hover:scale-105 active:scale-95' : ''}
               font-bold 
               text-sm 
               sm:text-base 
               md:text-lg
-            "
-            title="Acercar"
+            `}
+            title={scale >= 5 ? "Zoom máximo alcanzado (500%)" : "Acercar"}
           >
             +
           </button>
           <button
             onClick={handleZoomOut}
-            className="
+            disabled={scale <= 1}
+            className={`
               w-7 h-7 
               sm:w-9 sm:h-9 
               md:w-12 md:h-12 
-              bg-gradient-to-br from-blue-500 to-blue-600 
+              ${scale <= 1 
+                ? 'bg-gradient-to-br from-gray-300 to-gray-400 cursor-not-allowed' 
+                : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
+              }
               text-white 
               rounded-md 
               sm:rounded-lg 
-              hover:from-blue-600 hover:to-blue-700 
               transition-all duration-200 
               flex items-center justify-center 
               shadow-sm 
               sm:shadow-md 
-              hover:shadow-lg 
-              transform hover:scale-105 active:scale-95 
+              ${scale > 1 ? 'hover:shadow-lg transform hover:scale-105 active:scale-95' : ''}
               font-bold 
               text-sm 
               sm:text-base 
               md:text-lg
-            "
-            title="Alejar"
+            `}
+            title={scale <= 1 ? "Zoom mínimo alcanzado (100%)" : "Alejar"}
           >
             −
           </button>
