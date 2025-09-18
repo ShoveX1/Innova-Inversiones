@@ -30,6 +30,7 @@ def build_lotes_payload() -> Dict[str, Any]:
         "area_lote",
         "perimetro",
         "precio",
+        "descripcion"
     )
 
     data = [
@@ -42,6 +43,7 @@ def build_lotes_payload() -> Dict[str, Any]:
             "area_lote": float(lote["area_lote"]),
             "perimetro": float(lote["perimetro"]),
             "precio": float(lote["precio"]) if lote["precio"] is not None else None,
+            "descripcion": str(lote["descripcion"]) if lote["descripcion"] else None
         }
         for lote in lotes_data
     ]

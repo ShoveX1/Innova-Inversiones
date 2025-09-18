@@ -12,6 +12,7 @@ type Props = {
     precio_metro_cuadrado: number | null;
     estado: string;
     estado_nombre: string;
+    descripcion: string | null;
   } | null;
   onClose?: () => void;
 };
@@ -244,7 +245,7 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
                   px-2 py-1 sm:px-3 sm:py-2
                 ">
                   <span>📍</span>
-                  <span className="font-medium">M-{lote.manzana} • Lote {lote.lote_numero}</span>
+                  <span className="font-medium">Descripción: {lote.descripcion}</span>
                 </div>
               </>
             )}

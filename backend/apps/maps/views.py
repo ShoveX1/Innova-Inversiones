@@ -41,7 +41,8 @@ def lotes_estado(request):
             'estado__nombre',
             'area_lote',
             'perimetro',
-            'precio'
+            'precio',
+            'descripcion'
         )
         
         # Serialización optimizada
@@ -54,7 +55,8 @@ def lotes_estado(request):
                 "estado_nombre": lote['estado__nombre'],
                 "area_lote": float(lote['area_lote']),
                 "perimetro": float(lote['perimetro']),
-                "precio": float(lote['precio']) if lote['precio'] else None
+                "precio": float(lote['precio']) if lote['precio'] else None,
+                "descripcion": str(lote['descripcion']) if lote['descripcion'] else None
             }
             for lote in lotes_data
         ]
