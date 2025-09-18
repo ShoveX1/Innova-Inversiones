@@ -13,6 +13,7 @@ export interface Lote {
   estado: string; 
   estado_nombre: string;
   perimetro?: number;
+  descripcion: string;
 }
 
 export default function MapaPage() {
