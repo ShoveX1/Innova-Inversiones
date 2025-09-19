@@ -105,6 +105,12 @@ DATABASES = {
     'default': env.db(),  # lee DATABASE_URL del .env
 }
 
+## Forzar opciones para Supabase Pooler
+DATABASES['default']['CONN_MAX_AGE'] = 0  # siempre abre/cierra conexión
+DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
+DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True
+
 # Ajustes adicionales para conexiones a Supabase (directo o pooler)
 db_url = env('DATABASE_URL', default='')
 if db_url:
