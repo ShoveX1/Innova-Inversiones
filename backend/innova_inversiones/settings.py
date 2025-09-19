@@ -104,36 +104,33 @@ WSGI_APPLICATION = 'innova_inversiones.wsgi.application'
 DATABASES = {
     'default': env.db(),  # lee DATABASE_URL del .env
 }
-
-## Forzar opciones para Supabase Pooler
-DATABASES['default']['CONN_MAX_AGE'] = 0  # siempre abre/cierra conexión
-DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
-DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}
-DATABASES['default']['CONN_HEALTH_CHECKS'] = True
-
 # Ajustes adicionales para conexiones a Supabase (directo o pooler)
 db_url = env('DATABASE_URL', default='')
 if db_url:
     parsed = urlparse(db_url)
     is_pooler = (parsed.port == 6543) or (parsed.hostname and 'pooler' in parsed.hostname)
 
-    # Asegurar SSL en producción / entornos remotos
     DATABASES['default'].setdefault('OPTIONS', {})
     DATABASES['default']['OPTIONS']['sslmode'] = 'require'
 
-    # Health checks para conexiones reutilizadas
+    # Keepalives para evitar cortes de conexión
+    DATABASES['default']['OPTIONS'].update({
+        "keepalives": 1,
+        "keepalives_idle": 30,
+        "keepalives_interval": 10,
+        "keepalives_count": 5,
+    })
+
+    # Health checks
     DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 
     if is_pooler:
         # Recomendaciones para PgBouncer (pooler de Supabase)
-        # - Desactivar conexiones persistentes
-        # - Desactivar server-side cursors
         DATABASES['default']['CONN_MAX_AGE'] = 0
         DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
     else:
         # Conexión directa (5432) puede usar persistencia moderada
         DATABASES['default'].setdefault('CONN_MAX_AGE', 600)
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -217,3 +214,17 @@ CACHES = {
         }
     }
 }
+# Logging de base de datos (solo si DEBUG=True)
+if DEBUG:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {"console": {"class": "logging.StreamHandler"}},
+        "root": {"handlers": ["console"], "level": "INFO"},
+        "loggers": {
+            "django.db.backends": {
+                "handlers": ["console"],
+                "level": "DEBUG",  # Mostrar queries y conexiones
+            },
+        },
+    }
