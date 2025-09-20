@@ -582,8 +582,13 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       const dy = t.clientY - lastPointerRef.current.y;
       const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
       const s = scaleRef.current;
-      const newX = current.x - dx * (current.w / Math.max(1, containerSize.width)) * Math.max(1, s);
-      const newY = current.y - dy * (current.h / Math.max(1, containerSize.height)) * Math.max(1, s);
+      // Reducir sensibilidad y atenuar influencia del zoom en pan táctil
+      const sensitivity = 0.6; // 60% de la velocidad anterior
+      const scaleInfluence = 1 + (Math.max(1, s) - 1) * 0.4; // antes 100%, ahora 40%
+      const factorX = (current.w / Math.max(1, containerSize.width)) * scaleInfluence * sensitivity;
+      const factorY = (current.h / Math.max(1, containerSize.height)) * scaleInfluence * sensitivity;
+      const newX = current.x - dx * factorX;
+      const newY = current.y - dy * factorY;
       setSvgViewBox({ x: newX, y: newY, w: current.w, h: current.h });
       lastPointerRef.current = { x: t.clientX, y: t.clientY };
     }
