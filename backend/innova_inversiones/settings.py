@@ -126,7 +126,7 @@ if db_url:
 
     if is_pooler:
         # ✅ SOLUCIÓN: Mantener conexiones activas
-        DATABASES['default']['CONN_MAX_AGE'] = 60  # 1 minuto
+        DATABASES['default']['CONN_MAX_AGE'] = 60 # 1 minuto
         DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
         # Configuración específica para pooler
         DATABASES['default']['OPTIONS'].update({
@@ -212,11 +212,10 @@ CORS_ALLOW_CREDENTIALS = True
 # Cache Configuration
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': None,  # sin expiración por defecto (se invalida por tarea/cron)
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://localhost:6379/1',
         'OPTIONS': {
-            'MAX_ENTRIES': 1000,
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
     }
 }
