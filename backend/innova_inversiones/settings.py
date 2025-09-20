@@ -125,9 +125,15 @@ if db_url:
     DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 
     if is_pooler:
-        # Recomendaciones para PgBouncer (pooler de Supabase)
-        DATABASES['default']['CONN_MAX_AGE'] = 0
+        # ✅ SOLUCIÓN: Mantener conexiones activas
+        DATABASES['default']['CONN_MAX_AGE'] = 60 # 1 minuto
         DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
+        # Configuración específica para pooler
+        DATABASES['default']['OPTIONS'].update({
+            'application_name': 'innova_inversiones',
+            'connect_timeout': 10,
+            'options': '-c default_transaction_isolation=read committed'
+        })
     else:
         # Conexión directa (5432) puede usar persistencia moderada
         DATABASES['default'].setdefault('CONN_MAX_AGE', 600)
@@ -206,11 +212,10 @@ CORS_ALLOW_CREDENTIALS = True
 # Cache Configuration
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': None,  # sin expiración por defecto (se invalida por tarea/cron)
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://localhost:6379/1',
         'OPTIONS': {
-            'MAX_ENTRIES': 1000,
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
     }
 }

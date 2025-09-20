@@ -23,8 +23,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
   const containerRef = useRef<HTMLDivElement>(null);
   const [svgLoaded, setSvgLoaded] = useState(false);
   const [scale, setScale] = useState(1);
-  const [translateX, setTranslateX] = useState(0);
-  const [translateY, setTranslateY] = useState(0);
+  // Deprecated translate states (reemplazado por viewBox). Eliminados para evitar inconsistencias.
   const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
   const [svgNaturalSize, setSvgNaturalSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
   const [selectedLote, setSelectedLote] = useState<string | null>(null);
@@ -34,6 +33,8 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
   const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
   const pinchLastDistanceRef = useRef<number | null>(null);
   const tapStartRef = useRef<{ x: number; y: number; t: number; target: Element | null } | null>(null);
+  const lastTapRef = useRef<{ x: number; y: number; time: number; fingers: number } | null>(null);
+  const containerTapStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const panFrameRef = useRef<number | null>(null);
   const isPanningRef = useRef(false);
   const scaleRef = useRef(1);
@@ -50,6 +51,32 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     svgEl.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
     viewBoxRef.current = vb;
   }, [getSvgEl]);
+
+  // Helper: zoom en un punto de pantalla (clientX/clientY) con límites y centrado
+  const zoomAtClientPoint = useCallback((clientX: number, clientY: number, direction: 'in' | 'out' = 'in') => {
+    const svgEl = getSvgEl();
+    if (!svgEl) return;
+    const pt = svgEl.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+    const svgPt = pt.matrixTransform(svgEl.getScreenCTM()?.inverse() || (new DOMMatrix()));
+
+    const factor = direction === 'in' ? 1.2 : 1 / 1.2;
+    const minScale = 1;
+    const maxScale = 5;
+    const nextScale = Math.max(minScale, Math.min(maxScale, scaleRef.current * factor));
+    if (nextScale === scaleRef.current) return;
+
+    const base = baseViewBoxRef.current;
+    const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : base;
+    const zoomRatio = scaleRef.current / nextScale;
+    const newW = current.w * zoomRatio;
+    const newH = current.h * zoomRatio;
+    const newX = svgPt.x - (svgPt.x - current.x) * (newW / current.w);
+    const newY = svgPt.y - (svgPt.y - current.y) * (newH / current.h);
+    setSvgViewBox({ x: newX, y: newY, w: newW, h: newH });
+    setScale(nextScale);
+  }, [getSvgEl, setSvgViewBox]);
 
   // Mantener refs simples (para wheel/dblclick)
   useEffect(() => { scaleRef.current = scale; }, [scale]);
@@ -119,27 +146,8 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
   // Doble clic: acercar (o alejar con Shift)
   const handleDoubleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const svgEl = getSvgEl();
-    if (!svgEl) return;
-    const pt = svgEl.createSVGPoint();
-    pt.x = e.clientX;
-    pt.y = e.clientY;
-    const svgPt = pt.matrixTransform(svgEl.getScreenCTM()?.inverse() || (new DOMMatrix()));
-
-    const factor = e.shiftKey ? 1 / 1.2 : 1.2;
-    const minScale = 1; // 100% mínimo
-    const maxScale = 5; // 500% máximo
-    const nextScale = Math.max(minScale, Math.min(maxScale, scaleRef.current * factor));
-    const base = baseViewBoxRef.current;
-    const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : base;
-    const zoomRatio = scaleRef.current / nextScale;
-    const newW = current.w * zoomRatio;
-    const newH = current.h * zoomRatio;
-    const newX = svgPt.x - (svgPt.x - current.x) * (newW / current.w);
-    const newY = svgPt.y - (svgPt.y - current.y) * (newH / current.h);
-    setSvgViewBox({ x: newX, y: newY, w: newW, h: newH });
-    setScale(nextScale);
-  }, [getSvgEl, setSvgViewBox]);
+    zoomAtClientPoint(e.clientX, e.clientY, e.shiftKey ? 'out' : 'in');
+  }, [zoomAtClientPoint]);
 
   // Programar zoom con rueda (usable desde contenedor y desde el documento SVG)
   const scheduleWheelZoom = useCallback((clientX: number, clientY: number, deltaY: number) => {
@@ -251,15 +259,29 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
             // Si se estaba haciendo pinch, no seleccionar
             if (pinchLastDistanceRef.current != null) return;
             
-            const dt = Date.now() - start.t;
+            const now = Date.now();
+            const dt = now - start.t;
             if (dt <= 500) {
+              const touch = (ev.changedTouches && ev.changedTouches[0]) || null;
               // Solo prevenir por defecto si fue un tap válido (sin movimiento significativo)
               ev.preventDefault();
               ev.stopPropagation();
-              const targetEl = (start.target as Element) ?? (ev.currentTarget as Element);
-              const codigo = targetEl.getAttribute('data-codigo') || targetEl.id;
-              if (codigo) {
-                selectCodigo(codigo);
+
+              // Doble tap detection (umbral corto y poca distancia)
+              const last = lastTapRef.current;
+              const isDoubleTap = !!(last && (now - last.time) < 350 && touch && Math.hypot((touch.clientX - last.x), (touch.clientY - last.y)) < 24 && last.fingers === 1);
+
+              if (isDoubleTap && touch) {
+                // Zoom in centrado en el punto del tap
+                zoomAtClientPoint(touch.clientX, touch.clientY, 'in');
+                lastTapRef.current = null;
+              } else {
+                lastTapRef.current = touch ? { x: touch.clientX, y: touch.clientY, time: now, fingers: 1 } : { x: start.x, y: start.y, time: now, fingers: 1 };
+                const targetEl = (start.target as Element) ?? (ev.currentTarget as Element);
+                const codigo = targetEl.getAttribute('data-codigo') || targetEl.id;
+                if (codigo) {
+                  selectCodigo(codigo);
+                }
               }
             }
           };
@@ -498,6 +520,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       // desde cualquier punto, incluyendo lotes
       const t = e.touches[0];
       lastPointerRef.current = { x: t.clientX, y: t.clientY };
+      containerTapStartRef.current = { x: t.clientX, y: t.clientY, t: Date.now() };
       setIsPanning(true);
     }
   }, [scale]);
@@ -506,26 +529,40 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     if (!objectRef.current) return;
     if (e.touches.length === 2) {
       e.preventDefault();
-      const { points } = getTouchPoints(e.touches as any);
-      const dx = points[0].x - points[1].x;
-      const dy = points[0].y - points[1].y;
+      const t0 = e.touches[0];
+      const t1 = e.touches[1];
+      const dx = t0.clientX - t1.clientX;
+      const dy = t0.clientY - t1.clientY;
       const distance = Math.hypot(dx, dy);
       const lastDistance = pinchLastDistanceRef.current ?? distance;
-      const midpoint = { x: (points[0].x + points[1].x) / 2, y: (points[0].y + points[1].y) / 2 };
+
+      // Punto medio en coordenadas de pantalla (client)
+      const midClientX = (t0.clientX + t1.clientX) / 2;
+      const midClientY = (t0.clientY + t1.clientY) / 2;
+
+      // Convertir a coordenadas del SVG
+      const svgEl = getSvgEl();
+      if (!svgEl) return;
+      const pt = svgEl.createSVGPoint();
+      pt.x = midClientX;
+      pt.y = midClientY;
+      const svgPt = pt.matrixTransform(svgEl.getScreenCTM()?.inverse() || (new DOMMatrix()));
 
       const factor = distance / (lastDistance || distance);
       const minScale = 1; // 100% mínimo
       const maxScale = 5; // 500% máximo
-      const nextScaleUnclamped = scale * factor;
+      const nextScaleUnclamped = scaleRef.current * factor;
       const nextScale = Math.max(minScale, Math.min(maxScale, nextScaleUnclamped));
-      const k = nextScale / scale;
+      const k = nextScale / scaleRef.current;
       if (k !== 1) {
         const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
         const newW = current.w * (scaleRef.current / nextScale);
         const newH = current.h * (scaleRef.current / nextScale);
-        const newX = midpoint.x - (midpoint.x - current.x) * (newW / current.w);
-        const newY = midpoint.y - (midpoint.y - current.y) * (newH / current.h);
+        const newX = svgPt.x - (svgPt.x - current.x) * (newW / current.w);
+        const newY = svgPt.y - (svgPt.y - current.y) * (newH / current.h);
         setSvgViewBox({ x: newX, y: newY, w: newW, h: newH });
+        // Mantener indicador de zoom sincronizado
+        setScale(nextScale);
       }
       pinchLastDistanceRef.current = distance;
       setIsPanning(false);
@@ -533,6 +570,14 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     } else if (e.touches.length === 1 && isPanning && lastPointerRef.current) {
       e.preventDefault();
       const t = e.touches[0];
+      // Cancelar tap de contenedor si hubo movimiento significativo
+      if (containerTapStartRef.current) {
+        const dxTap = Math.abs(t.clientX - containerTapStartRef.current.x);
+        const dyTap = Math.abs(t.clientY - containerTapStartRef.current.y);
+        if (dxTap > 8 || dyTap > 8) {
+          containerTapStartRef.current = null;
+        }
+      }
       const dx = t.clientX - lastPointerRef.current.x;
       const dy = t.clientY - lastPointerRef.current.y;
       const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
@@ -544,16 +589,35 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     }
   }, [isPanning, clampPan, setSvgViewBox, containerSize]);
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement> | TouchEvent) => {
+    // Detectar doble tap en el contenedor (fondo)
+    const changed = (e as any).changedTouches as TouchList | undefined;
+    if (changed && changed.length === 1 && pinchLastDistanceRef.current == null && containerTapStartRef.current) {
+      const t = changed[0];
+      const now = Date.now();
+      const dt = now - containerTapStartRef.current.t;
+      if (dt <= 350) {
+        const last = lastTapRef.current;
+        const isDoubleTap = !!(last && (now - last.time) < 350 && Math.hypot((t.clientX - last.x), (t.clientY - last.y)) < 24 && last.fingers === 1);
+        if (isDoubleTap) {
+          (e as any).preventDefault?.();
+          (e as any).stopPropagation?.();
+          zoomAtClientPoint(t.clientX, t.clientY, 'in');
+          lastTapRef.current = null;
+        } else {
+          lastTapRef.current = { x: t.clientX, y: t.clientY, time: now, fingers: 1 };
+        }
+      }
+      containerTapStartRef.current = null;
+    }
+
     if ((pinchLastDistanceRef.current ?? null) != null) {
       pinchLastDistanceRef.current = null;
     }
     setIsPanning(false);
     lastPointerRef.current = null;
-    // Consolidar transform imperativo en estado
-    // nada que consolidar (viewBox actualizado)
     setScale(scaleRef.current);
-  }, []);
+  }, [zoomAtClientPoint]);
 
   // Medir contenedor visible (viewport del mapa)
   useEffect(() => {
@@ -612,23 +676,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
 
     const onDblClick = (ev: MouseEvent) => {
       ev.preventDefault();
-      const svgObject = objectRef.current;
-      if (!svgObject) return;
-      const rect = svgObject.getBoundingClientRect();
-      const cursorX = ev.clientX - rect.left;
-      const cursorY = ev.clientY - rect.top;
-      const factor = (ev as MouseEvent & { shiftKey?: boolean }).shiftKey ? 1 / 1.2 : 1.2;
-      const minScale = 1; // 100% mínimo
-      const maxScale = 5; // 500% máximo
-      const nextScaleUnclamped = scale * factor;
-      const nextScale = Math.max(minScale, Math.min(maxScale, nextScaleUnclamped));
-      const k = nextScale / scale;
-      if (k === 1) return;
-      const nextTranslateX = translateX - (k - 1) * (cursorX);
-      const nextTranslateY = translateY - (k - 1) * (cursorY);
-      setScale(nextScale);
-      setTranslateX(nextTranslateX);
-      setTranslateY(nextTranslateY);
+      zoomAtClientPoint(ev.clientX, ev.clientY, (ev as MouseEvent & { shiftKey?: boolean }).shiftKey ? 'out' : 'in');
     };
 
     const onMouseDown = (ev: MouseEvent) => {
