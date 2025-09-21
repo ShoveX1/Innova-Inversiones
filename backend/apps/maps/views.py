@@ -3,29 +3,16 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 from database.models import Lote
-from django.core.cache import cache
 import time
-from . import snapshot
-import hashlib
 import psycopg2  # para detectar errores de conexión específicos
 
 
 @api_view(['GET'])
 def lotes_estado(request):
     """
-    Vista optimizada para obtener el estado de todos los lotes.
-    Usa cache, snapshot y reintentos para reducir fallos por DB.
+    Devuelve el estado de todos los lotes directamente desde la base de datos.
+    Sin cache ni snapshot para probar la DB.
     """
-    cache_key = 'lotes_estado_cache'
-    
-    # Intentar obtener del cache primero
-    cached_data = cache.get(cache_key)
-    if cached_data:
-        etag = hashlib.md5(str(len(cached_data)).encode('utf-8')).hexdigest()
-        resp = Response(cached_data)
-        resp["Cache-Control"] = "public, max-age=86400"  # 24h
-        resp["ETag"] = etag
-        return resp
 
     attempts = 0
     max_attempts = 3
@@ -63,26 +50,13 @@ def lotes_estado(request):
                 for lote in lotes_data
             ]
 
-            # Cache y snapshot
-            cache.set(cache_key, data, None)
-            try:
-                snapshot.write_snapshot({
-                    "updated_at": time.time(),
-                    "version": 1,
-                    "data": data,
-                })
-            except Exception:
-                pass
+            # Responder directamente sin cache ni snapshot
 
             end_time = time.time()
             print(f"✅ Lotes procesados en {end_time - start_time:.3f} segundos")
             print(f"📊 Total de lotes: {len(data)}")
 
-            etag = hashlib.md5(str(len(data)).encode('utf-8')).hexdigest()
-            resp = Response(data)
-            resp["Cache-Control"] = "public, max-age=86400"
-            resp["ETag"] = etag
-            return resp
+            return Response(data)
 
         except psycopg2.OperationalError as e:
             attempts += 1
@@ -92,15 +66,7 @@ def lotes_estado(request):
             print(f"❌ Error inesperado en lotes_estado: {str(e)}")
             break
 
-    # Si fallaron todos los intentos → usar snapshot o error
-    snap = snapshot.read_snapshot()
-    if snap and isinstance(snap, dict) and "data" in snap:
-        etag = hashlib.md5(str(len(snap["data"])).encode('utf-8')).hexdigest()
-        resp = Response(snap["data"])
-        resp["Cache-Control"] = "public, max-age=86400"
-        resp["ETag"] = etag
-        return resp
-    
+    # Si fallaron todos los intentos → error
     return Response(
         {"error": "Error interno del servidor"},
         status=status.HTTP_500_INTERNAL_SERVER_ERROR
