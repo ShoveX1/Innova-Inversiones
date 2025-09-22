@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'users',
     'apps.maps',
     'database',
+    'apps.admin',
 ]
 
 MIDDLEWARE = [
