@@ -23,7 +23,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('properties.urls')),
     path('api/maps/', include('apps.maps.urls')),
-    path('api/users/', include('users.urls')),
 ]
 
 # Configurar URLs para archivos media en desarrollo
