@@ -1,6 +1,10 @@
 # Entornos virtuales
 venv/
+
+#variantes de env
 .env
+.env.*
+*.env
 
 # Archivos de Python compilados
 *.pyc
@@ -15,6 +19,9 @@ db.sqlite3
 # Logs
 *.log
 
+# Snapshot local del mapa
+data/lotes_snapshot.json
+
 # Configuración de IDEs
 .vscode/
 .idea/
@@ -22,3 +29,8 @@ db.sqlite3
 # Archivos de sistema
 .DS_Store
 Thumbs.db
+
+# Django generados
+staticfiles/
+media/
+collectstatic/

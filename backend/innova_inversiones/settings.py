@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'users',
     'apps.maps',
     'database',
+    'apps.administrator',
 ]
 
 MIDDLEWARE = [
@@ -75,7 +76,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# WhiteNoise: en producción usar almacenamiento con manifiesto (requiere collectstatic).
+# En desarrollo, usar finders para servir estáticos de apps (incluye DRF UI) sin collectstatic.
+if not DEBUG:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+else:
+    WHITENOISE_AUTOREFRESH = True
+    WHITENOISE_USE_FINDERS = True
 
 ROOT_URLCONF = 'innova_inversiones.urls'
 
