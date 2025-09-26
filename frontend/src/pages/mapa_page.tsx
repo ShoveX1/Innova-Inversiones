@@ -48,11 +48,23 @@ export default function MapaPage() {
   useEffect(() => {
     const onFocus = () => fetchLotes();
     const onVisible = () => { if (document.visibilityState === 'visible') fetchLotes(); };
+    let bc: BroadcastChannel | null = null;
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        bc = new BroadcastChannel('lotes-updates');
+        bc.onmessage = (ev) => {
+          if (ev?.data?.type === 'lote-updated') {
+            fetchLotes();
+          }
+        };
+      } catch {}
+    }
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onVisible);
     return () => {
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVisible);
+      try { bc?.close(); } catch {}
     };
   }, [fetchLotes]);
 

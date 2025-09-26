@@ -50,6 +50,12 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
     const [draftValue, setDraftValue] = useState<string>('');
     const [saving, setSaving] = useState<boolean>(false);
     const [drafts, setDrafts] = useState<Record<string, Partial<Record<EditableField, any>>>>({});
+    const [channel] = useState<BroadcastChannel | null>(() => {
+        if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+            try { return new BroadcastChannel('lotes-updates'); } catch { return null; }
+        }
+        return null;
+    });
 
     const fieldToPayloadKey: Record<'estado'|'area_lote'|'perimetro'|'precio'|'precio_metro_cuadrado'|'descripcion', string> = {
         estado: 'input_estado',
@@ -114,6 +120,8 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
             setDrafts(prev => { const { [cod]: _, ...rest } = prev; return rest; });
             setEditing(null);
             setDraftValue('');
+            // Notificar a otras páginas/ventanas que hubo una actualización
+            try { channel?.postMessage({ type: 'lote-updated', codigo: cod, at: Date.now() }); } catch {}
         }catch(e:any){
             setError(e.message || 'No se pudo guardar los cambios');
         }finally{
