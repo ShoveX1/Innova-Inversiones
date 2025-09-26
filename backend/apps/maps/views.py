@@ -10,23 +10,26 @@ from django.utils.dateparse import parse_datetime
 from django.utils.http import http_date
 from datetime import datetime, timezone
 
+# Flag global para habilitar/deshabilitar lectura desde snapshot
+USE_SNAPSHOT = False
+
 
 @api_view(['GET'])
 def lotes_estado(request):
     """
     Devuelve el estado de todos los lotes.
-    Por defecto sirve desde snapshot en disco para reducir carga a la base.
-    Bypass con ?source=db para leer directo de la DB.
+    Por ahora se lee directamente de la base de datos para tener datos al instante.
+    En el futuro, el snapshot podrá reactivarse para reducir carga.
     """
 
     attempts = 0
     max_attempts = 3
     delay = 0.2  # segundos entre reintentos
 
-    source = (request.query_params.get('source') or 'snapshot').lower()
+    source = (request.query_params.get('source') or 'db').lower()
 
-    # 1) Intentar responder desde snapshot (a menos que se pida explícitamente DB)
-    if source != 'db':
+    # Intento de responder desde snapshot SOLO si está habilitado explícitamente
+    if source != 'db' and USE_SNAPSHOT:
         payload = map_snapshot.read_snapshot()
         if payload and isinstance(payload, dict) and 'data' in payload:
             data = payload.get('data') or []
