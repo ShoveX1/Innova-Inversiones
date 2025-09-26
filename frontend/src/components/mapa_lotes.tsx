@@ -4,10 +4,6 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 interface Lote {
   codigo: string;
   estado: string;
-  estado_nombre: string;
-  area_lote: number;
-  perimetro?: number;
-  precio: number | null;
 }
 
 type Props = { 
@@ -16,9 +12,10 @@ type Props = {
   error: string | null;
   onSelectCodigo: (codigo: string) => void;
   selectedCodigo?: string | null;
- };
+  colorOverrides?: Partial<Record<string, string>>;
+};
 
-export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selectedCodigo = null }: Props) {
+export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selectedCodigo = null, colorOverrides }: Props) {
   const objectRef = useRef<HTMLObjectElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [svgLoaded, setSvgLoaded] = useState(false);
@@ -193,7 +190,8 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     "2": "#facc15", // Amarillo - Reservado
     "3": "#ef4444", // Rojo - Vendido
     "4": "#ef4444", // Rojo - Bloqueado
-  }), []);
+    ...(colorOverrides || {})
+  }), [colorOverrides]);
 
   // Función optimizada para aplicar colores al SVG
   const applyColors = useCallback((svgDoc: Document, lotesData: Lote[]) => {
