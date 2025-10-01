@@ -17,7 +17,7 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
     const [lotes, setLotes] = useState<Lote_admin[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
+    
     async function cargarLotes(selected?: string | null){
         try{
             setLoading(true);
