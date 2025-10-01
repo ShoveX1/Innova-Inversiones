@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 import uuid
 
 # ==============================
@@ -32,27 +33,14 @@ class TipoSolicitud(models.Model):
 # ==============================
 class Usuario(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    username = models.CharField(max_length=50, unique=True)
-    nombre_completo = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
-    password_hash = models.CharField(max_length=255)  # hash bcrypt/argon2
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='usuario', null=True, blank=True)
     rol = models.ForeignKey(RolUsuario, on_delete=models.PROTECT)
     estado = models.BooleanField(default=True)  # activo/inactivo
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     ultima_conexion = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return self.username
-
-
-class Cliente(models.Model):
-    nombre = models.CharField(max_length=100)
-    telefono = models.CharField(max_length=20)
-    email = models.EmailField(unique=True, null=True, blank=True)
-    creado_en = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.nombre
+        return self.user.username
 
 
 class Lote(models.Model):
@@ -72,11 +60,12 @@ class Lote(models.Model):
         return f"{self.codigo} - {self.manzana}/{self.lote_numero}"
 
 
+
 class Solicitud(models.Model):
     mensaje = models.TextField()
     tipo_solicitud = models.ForeignKey(TipoSolicitud, on_delete=models.PROTECT)
     lote = models.ForeignKey(Lote, on_delete=models.SET_NULL, null=True, blank=True)
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, null=True, blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -90,7 +79,6 @@ class Transaccion(models.Model):
 
     tipo = models.CharField(max_length=8, choices=Tipo.choices)
     lote = models.ForeignKey(Lote, on_delete=models.CASCADE)
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
     creado_en = models.DateTimeField(auto_now_add=True)
 
