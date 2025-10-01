@@ -41,49 +41,34 @@ def AdminUpdateLote(request):
 
     lote = Lote.objects.get(codigo__iexact=codigo)
 
-    raw_estado = request.data.get("input_estado")
-    raw_area_lote = request.data.get("input_area_lote")
-    raw_perimetro = request.data.get("input_perimetro")
-    raw_precio = request.data.get("input_precio")
-    raw_precio_metro_cuadrado = request.data.get("input_precio_metro_cuadrado")
-    raw_descripcion = request.data.get("input_descripcion")
+    # Solo actualizar campos presentes en el request; si falta la clave, no tocar el valor existente
+    if "input_estado" in request.data:
+        raw_estado = request.data.get("input_estado")
+        lote.estado_id = int(raw_estado)
 
-    if raw_estado is None:
-        pass
-    else:
-        nuevo_estado_id = int(raw_estado)
-        lote.estado_id = nuevo_estado_id
+    if "input_area_lote" in request.data:
+        raw_area_lote = request.data.get("input_area_lote")
+        lote.area_lote = float(raw_area_lote)
 
-    if raw_area_lote is None:
-        pass
-    else:
-        nuevo_area_lote = float(raw_area_lote)
-        lote.area_lote = nuevo_area_lote
+    if "input_perimetro" in request.data:
+        raw_perimetro = request.data.get("input_perimetro")
+        lote.perimetro = float(raw_perimetro)
 
-    if raw_perimetro is None:
-        pass
-    else:
-        nuevo_perimetro = float(raw_perimetro)
-        lote.perimetro = nuevo_perimetro
+    if "input_precio" in request.data:
+        raw_precio = request.data.get("input_precio")
+        # Si viene vacío o null explicitamente, interpretarlo como 0; de lo contrario castear a float
+        lote.precio = float(0) if raw_precio in (None, "") else float(raw_precio)
 
-    if raw_precio is None:
-        lote.precio = float(0)
-    else:
-        nuevo_precio = float(raw_precio)
-        lote.precio = nuevo_precio  
+    if "input_precio_metro_cuadrado" in request.data:
+        raw_precio_metro_cuadrado = request.data.get("input_precio_metro_cuadrado")
+        lote.precio_metro_cuadrado = float(0) if raw_precio_metro_cuadrado in (None, "") else float(raw_precio_metro_cuadrado)
 
-    if raw_precio_metro_cuadrado is None:
-        lote.precio_metro_cuadrado = float(0)
-    else:
-        nuevo_precio_metro_cuadrado = float(raw_precio_metro_cuadrado)
-        lote.precio_metro_cuadrado = nuevo_precio_metro_cuadrado
+    if "input_descripcion" in request.data:
+        raw_descripcion = request.data.get("input_descripcion")
+        # Permitir limpiar la descripción con null o string vacío
+        lote.descripcion = None if raw_descripcion in (None, "") else raw_descripcion
 
-    if raw_descripcion is None:
-        lote.descripcion = None
-    else:
-        lote.descripcion = raw_descripcion
-
-    # asignación correcta del FK
-    lote.save(update_fields=["estado", "area_lote", "perimetro", "precio", "precio_metro_cuadrado", "descripcion", "actualizado_en"])
+    # Guardar cambios
+    lote.save()
 
     return Response({"message": "Lote actualizado correctamente"}, status=status.HTTP_200_OK)
