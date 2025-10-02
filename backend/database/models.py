@@ -69,12 +69,31 @@ class Lote(models.Model):
     precio_metro_cuadrado = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     estado = models.ForeignKey(EstadoLote, on_delete=models.PROTECT, default=1)
     descripcion = models.TextField(null=True, blank=True)
+    cliente_comprador = models.ManyToManyField("Cliente", through="Cliente_Comprador", related_name="lotes", blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.codigo} - {self.manzana}/{self.lote_numero}"
 
+
+
+class Cliente_Comprador(models.Model):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name="cliente_comprador_relaciones", related_query_name="cliente_comprador_relacion")
+    lote = models.ForeignKey(Lote, on_delete=models.CASCADE, related_name="cliente_comprador_relaciones", related_query_name="cliente_comprador_relacion")
+    fecha_compra = models.DateTimeField(auto_now_add=True)
+    tipo_relacion = models.CharField(
+        max_length=20,
+        choices=[
+            ("comprador", "Comprador"),
+            ("reservante", "Reservante"),
+            ("copropietario", "Copropietario"),
+        ]
+    )
+    porcentaje_participacion = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.cliente.nombre} - {self.lote.codigo}"
 
 
 class Solicitud(models.Model):
