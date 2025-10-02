@@ -31,7 +31,7 @@ class TipoSolicitud(models.Model):
 # ==============================
 # TABLAS PRINCIPALES
 # ==============================
-class Usuario(models.Model):
+class Usuario_Perfil(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='usuario', null=True, blank=True)
     rol = models.ForeignKey(RolUsuario, on_delete=models.PROTECT)
@@ -41,6 +41,22 @@ class Usuario(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
+class Cliente(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    nombre = models.CharField(max_length=100)
+    apellidos=models.CharField(max_length=100)
+    dni=models.CharField(max_length=8, unique=True, null=True, blank=True)
+    direccion=models.CharField(max_length=100, null=True, blank=True)
+    telefono=models.CharField(max_length=12, null=True, blank=True,)
+    email=models.EmailField(max_length=254, unique=True, null=True, blank=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.nombre} {self.apellidos}"
+
 
 
 class Lote(models.Model):
@@ -65,7 +81,7 @@ class Solicitud(models.Model):
     mensaje = models.TextField()
     tipo_solicitud = models.ForeignKey(TipoSolicitud, on_delete=models.PROTECT)
     lote = models.ForeignKey(Lote, on_delete=models.SET_NULL, null=True, blank=True)
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, null=True, blank=True)
+    usuario = models.ForeignKey(Usuario_Perfil, on_delete=models.CASCADE, null=True, blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -79,7 +95,7 @@ class Transaccion(models.Model):
 
     tipo = models.CharField(max_length=8, choices=Tipo.choices)
     lote = models.ForeignKey(Lote, on_delete=models.CASCADE)
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(Usuario_Perfil, on_delete=models.CASCADE)
     creado_en = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -90,7 +106,7 @@ class HistorialEstado(models.Model):
     lote = models.ForeignKey(Lote, on_delete=models.CASCADE)
     estado_anterior = models.ForeignKey(EstadoLote, on_delete=models.PROTECT, related_name="estado_anterior")
     estado_nuevo = models.ForeignKey(EstadoLote, on_delete=models.PROTECT, related_name="estado_nuevo")
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(Usuario_Perfil, on_delete=models.CASCADE)
     creado_en = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
