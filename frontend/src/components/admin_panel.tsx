@@ -168,6 +168,7 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
             : value === 2 ? 'Reservado'
             : value === 3 ? 'Vendido'
             : value === 4 ? 'Bloqueado'
+            : value === 5 ? 'Bloque Comercial'
             : '';
     }
 
@@ -191,7 +192,7 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
                     <option value="2">Reservado</option>
                     <option value="3">Vendido</option>
                     <option value="4">Bloqueado</option>
-                    <option value="5">Bloqueo Comercial</option>
+                    <option value="5">Bloque Comercial</option>
                 </select>
             );
         }

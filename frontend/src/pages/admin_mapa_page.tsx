@@ -84,7 +84,7 @@ export default function AdminMapaPage(){
                 error={error}
                 onSelectCodigo={setSelectedCodigo}
                 selectedCodigo={selectedCodigo}
-                colorOverrides={{ "4": "#9ca3af", "5": "#ffffff" }}
+                colorOverrides={{ "4": "#9ca3af", "5": "#e0e0e0" }}
                 />
         </div>
         </div>

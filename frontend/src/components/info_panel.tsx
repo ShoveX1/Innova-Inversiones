@@ -25,6 +25,7 @@ function estadoBadge(estado: string, estadoNombre: string) {
     "2": { bg: "bg-yellow-100", text: "text-yellow-800", label: "Reservado", emoji: "🟡" },
     "3": { bg: "bg-red-100", text: "text-red-700", label: "Vendido", emoji: "🔴" },
     "4": { bg: "bg-red-100", text: "text-red-700", label: "Vendido", emoji: "🔴" },
+    "5": { bg: "bg-red-100", text: "text-red-700", label: "Vendido", emoji: "🔴" },
   };
   const cls = map[estado] ?? { bg: "bg-gray-100", text: "text-gray-700", label: estadoNombre || "—", emoji: "⚪" };
   return (
