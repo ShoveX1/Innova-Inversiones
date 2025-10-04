@@ -1,11 +1,14 @@
+from pydoc import pager
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 import uuid
 
 # ==============================
 # TABLAS DE CATÁLOGO
 # ==============================
 class RolUsuario(models.Model):
+    id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=20, unique=True)
     descripcion = models.TextField(blank=True, null=True)
 
@@ -14,6 +17,7 @@ class RolUsuario(models.Model):
 
 
 class EstadoLote(models.Model):
+    id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=20, unique=True)
     descripcion = models.TextField(blank=True, null=True)
 
@@ -22,6 +26,7 @@ class EstadoLote(models.Model):
 
 
 class TipoSolicitud(models.Model):
+    id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=20, unique=True)
 
     def __str__(self):
@@ -60,6 +65,7 @@ class Cliente(models.Model):
 
 
 class Lote(models.Model):
+    id = models.AutoField(primary_key=True)
     codigo = models.CharField(max_length=20, unique=True)
     manzana = models.CharField(max_length=5)
     lote_numero = models.CharField(max_length=10)
@@ -79,24 +85,26 @@ class Lote(models.Model):
 
 
 class Cliente_Comprador(models.Model):
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name="cliente_comprador_relaciones", related_query_name="cliente_comprador_relacion")
-    lote = models.ForeignKey(Lote, on_delete=models.CASCADE, related_name="cliente_comprador_relaciones", related_query_name="cliente_comprador_relacion")
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name="compras", related_query_name="compra")
+    lote = models.ForeignKey(Lote, on_delete=models.CASCADE, related_name="compras", related_query_name="compra")
     fecha_compra = models.DateTimeField(auto_now_add=True)
     tipo_relacion = models.CharField(
         max_length=20,
         choices=[
-            ("comprador", "Comprador"),
+            ("Propietario", "Propietario"),
             ("reservante", "Reservante"),
             ("copropietario", "Copropietario"),
         ]
     )
     porcentaje_participacion = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-
+       
     def __str__(self):
         return f"{self.cliente.nombre} - {self.lote.codigo}"
 
 
 class Solicitud(models.Model):
+    id = models.AutoField(primary_key=True)
     mensaje = models.TextField()
     tipo_solicitud = models.ForeignKey(TipoSolicitud, on_delete=models.PROTECT)
     lote = models.ForeignKey(Lote, on_delete=models.SET_NULL, null=True, blank=True)
@@ -107,21 +115,95 @@ class Solicitud(models.Model):
         return f"Solicitud #{self.id} - {self.tipo_solicitud.nombre}"
 
 
+
+
+class Credito(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    lote = models.ForeignKey(Lote, on_delete=models.CASCADE)
+    monto_base = models.DecimalField(max_digits=12, decimal_places=2)
+    interes = models.PositiveIntegerField(default=0)
+    monto_total = models.DecimalField(max_digits=12, decimal_places=2)
+    num_cuotas_totales = models.PositiveIntegerField()
+    num_cuotas_pagadas = models.PositiveIntegerField(default=0)
+    fecha_inicio = models.DateTimeField()
+    fecha_fin = models.DateTimeField(null=True, blank=True) 
+    class EstadoCredito(models.TextChoices):
+        PENDIENTE = "pendiente", "Pendiente"
+        EN_PROCESO = "en_proceso", "En Proceso"
+        CANCELADO = "cancelado", "Cancelado"
+    estado_credito = models.CharField(max_length=20, choices=EstadoCredito.choices)
+    
+    # Relación inversa para acceder a las transacciones
+    @property
+    def transacciones(self):
+        return Transaccion.objects.filter(credito=self)
+
+    def __str__(self):
+        return f"{self.cliente.nombre} - {self.lote.codigo}"
+    
+    def contar_cuotas_pagadas(self):
+        """Cuenta las transacciones de tipo CUOTA registradas para este crédito"""
+        return self.transacciones.filter(tipo=Transaccion.Tipo.CUOTA).count()
+    
+    def actualizar_cuotas_pagadas(self):
+        """Actualiza el contador de cuotas pagadas basado en las transacciones reales"""
+        self.num_cuotas_pagadas = self.contar_cuotas_pagadas()
+    
+    @property
+    def cuotas_restantes(self):
+        """Calcula cuántas cuotas faltan por pagar"""
+        return self.num_cuotas_totales - self.num_cuotas_pagadas
+    
+    @property
+    def credito_completado(self):
+        """Verifica si el crédito está completamente pagado"""
+        return self.num_cuotas_pagadas >= self.num_cuotas_totales
+    
+    @property
+    def porcentaje_pagado(self):
+        """Calcula el porcentaje de cuotas pagadas"""
+        if self.num_cuotas_totales == 0:
+            return 0
+        return round((self.num_cuotas_pagadas / self.num_cuotas_totales) * 100, 2)
+    
+    def save(self, *args, **kwargs):
+        self.monto_total = round(self.monto_base +(self.monto_base * self.interes /100),2)
+        # Actualizar el contador de cuotas pagadas antes de guardar
+        self.actualizar_cuotas_pagadas()
+        super().save(*args, **kwargs)
+
+
 class Transaccion(models.Model):
+    id = models.AutoField(primary_key=True)
+    credito = models.ForeignKey(Credito, on_delete=models.CASCADE, null=True, blank=True)
     class Tipo(models.TextChoices):
         RESERVA = "RESERVA", "Reserva"
         VENTA = "VENTA", "Venta"
-
-    tipo = models.CharField(max_length=8, choices=Tipo.choices)
+        CUOTA = "CUOTA", "Cuota"
+    tipo = models.CharField(max_length=8, choices=Tipo.choices, null=True, blank=True)
+    monto = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    metodo_pago = models.CharField(
+        max_length=20,
+        choices=[
+            ("efectivo", "Efectivo"),
+            ("transferencia", "Transferencia"),
+            ("tarjeta_debito", "Tarjeta Debito"),
+            ("tarjeta_credito", "Tarjeta Credito"),
+        ],
+        null=True, blank=True
+    )
     lote = models.ForeignKey(Lote, on_delete=models.CASCADE)
     usuario = models.ForeignKey(Usuario_Perfil, on_delete=models.CASCADE)
-    creado_en = models.DateTimeField(auto_now_add=True)
+    fecha = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return f"{self.tipo} - {self.lote.codigo}"
 
 
+
 class HistorialEstado(models.Model):
+    id = models.AutoField(primary_key=True)
     lote = models.ForeignKey(Lote, on_delete=models.CASCADE)
     estado_anterior = models.ForeignKey(EstadoLote, on_delete=models.PROTECT, related_name="estado_anterior")
     estado_nuevo = models.ForeignKey(EstadoLote, on_delete=models.PROTECT, related_name="estado_nuevo")
