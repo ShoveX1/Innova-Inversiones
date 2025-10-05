@@ -196,7 +196,7 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
                 </div>
 
                 {/* Precio destacado */}
-                {lote.estado === "1" ? (
+                {lote.estado === "1" || lote.estado === "2" ? (
                   <div className="
                     bg-gradient-to-r from-green-50 to-emerald-50 
                     border border-green-200 
@@ -217,20 +217,20 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
                   <div className={`
                     rounded-lg 
                     p-2 sm:p-3 
-                    ${lote.estado === "2" 
-                      ? "bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200" 
+                    ${lote.estado === "3" 
+                      ? "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200" 
                       : "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200"
                     }
                   `}>
                     <div className={`text-xs font-medium ${
-                      lote.estado === "2" ? "text-yellow-600" : "text-red-600"
+                      lote.estado === "3" ? "text-red-600" : "text-red-600"
                     }`}>
-                      {lote.estado === "2" ? "🟡 Estado" : "🔴 Estado"}
+                      {lote.estado === "3" ? "🔴 Estado" : "🔴 Estado"}
                     </div>
                     <div className={`text-base sm:text-lg font-bold ${
-                      lote.estado === "2" ? "text-yellow-800" : "text-red-800"
+                      lote.estado === "3" ? "text-red-800" : "text-red-800"
                     }`}>
-                      {lote.estado === "2" ? "Reservado" : "Vendido"}
+                      {lote.estado === "3" ? "Vendido" : "Vendido"}
                     </div>
                   </div>
                 )}
