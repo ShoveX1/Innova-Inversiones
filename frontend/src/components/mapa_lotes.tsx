@@ -740,7 +740,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
   }, [svgLoaded, scheduleWheelZoom, isPanning, clampPan, containerSize, setSvgViewBox, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   return (  
-    <div className="relative">
+    <div className="relative h-full">
       {loading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
           <div className="text-center">
@@ -766,7 +766,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       
       <div 
         ref={containerRef}
-        className="flex items-center justify-center h-full w-full overflow-hidden relative bg-gradient-to-br from-gray-50 to-gray-100 shadow-inner select-none overscroll-none"
+        className="flex items-center justify-center h-full w-full overflow-hidden sm:relative bg-gradient-to-br from-gray-50 to-gray-100 shadow-inner select-none overscroll-none"
         onWheel={handleWheel}
         onDoubleClick={handleDoubleClick}
         onMouseDown={handleMouseDown}

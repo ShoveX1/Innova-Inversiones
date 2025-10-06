@@ -79,9 +79,9 @@ export default function MapaPage() {
   );
 
   return (
-    <div className="flex min-h-0 min-w-0 w-full h-[90vh] relative mx-auto overflow-hidden">
+    <div className="flex min-h-0 min-w-0 w-full h-[60vh] sm:h-[92vh] relative mx-auto overflow-auto">
       {/* Mapa ocupa toda la pantalla */}
-      <div className="w-full h-full min-h-0 overflow-hidden px-[5%] ">
+      <div className="w-full h-full min-h-0 overflow-hidden sm:px-[5%] ">
         <MapaLotes  
           lotes={lotes}
           loading={loading}

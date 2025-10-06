@@ -122,7 +122,7 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
       ">
         {/* Header fijo */}
         <div data-drag-handle className="
-          flex items-center justify-between 
+          flex items-center justify-between select-none
           px-3 py-2 sm:px-4 sm:py-3 
           bg-gradient-to-r from-blue-600 to-blue-700 
           text-white
@@ -213,24 +213,42 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
                       </div>
                     )}
                   </div>
+                ) :
+                lote.estado === "2" ? (
+                  <div className="
+                    bg-gradient-to-r from-yellow-50 to-amber-50 
+                    border border-yellow-200 
+                    rounded-lg 
+                    p-2 sm:p-3
+                  ">
+                    <div className="text-xs text-yellow-600 font-medium">💰 Precio total</div>
+                    <div className="text-base sm:text-lg font-bold text-yellow-800">
+                      {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}
+                    </div>
+                    {lote.precio_metro_cuadrado != null && (
+                      <div className="text-xs text-yellow-600">
+                        {currency.format(Number(lote.precio_metro_cuadrado))} / m²
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div className={`
                     rounded-lg 
                     p-2 sm:p-3 
-                    ${lote.estado === "2" 
-                      ? "bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200" 
+                    ${lote.estado === "3" 
+                      ? "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200" 
                       : "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200"
                     }
                   `}>
                     <div className={`text-xs font-medium ${
-                      lote.estado === "2" ? "text-yellow-600" : "text-red-600"
+                      lote.estado === "3" ? "text-red-600" : "text-red-600"
                     }`}>
-                      {lote.estado === "2" ? "🟡 Estado" : "🔴 Estado"}
+                      {lote.estado === "3" ? "🔴 Estado" : "🔴 Estado"}
                     </div>
                     <div className={`text-base sm:text-lg font-bold ${
-                      lote.estado === "2" ? "text-yellow-800" : "text-red-800"
+                      lote.estado === "3" ? "text-red-800" : "text-red-800"
                     }`}>
-                      {lote.estado === "2" ? "Reservado" : "Vendido"}
+                      {lote.estado === "3" ? "Vendido" : "Vendido"}
                     </div>
                   </div>
                 )}
