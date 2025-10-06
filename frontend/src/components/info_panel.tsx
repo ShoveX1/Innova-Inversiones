@@ -122,7 +122,7 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
       ">
         {/* Header fijo */}
         <div data-drag-handle className="
-          flex items-center justify-between 
+          flex items-center justify-between select-none
           px-3 py-2 sm:px-4 sm:py-3 
           bg-gradient-to-r from-blue-600 to-blue-700 
           text-white
@@ -209,6 +209,24 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
                     </div>
                     {lote.precio_metro_cuadrado != null && (
                       <div className="text-xs text-green-600">
+                        {currency.format(Number(lote.precio_metro_cuadrado))} / m²
+                      </div>
+                    )}
+                  </div>
+                ) :
+                lote.estado === "2" ? (
+                  <div className="
+                    bg-gradient-to-r from-yellow-50 to-amber-50 
+                    border border-yellow-200 
+                    rounded-lg 
+                    p-2 sm:p-3
+                  ">
+                    <div className="text-xs text-yellow-600 font-medium">💰 Precio total</div>
+                    <div className="text-base sm:text-lg font-bold text-yellow-800">
+                      {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}
+                    </div>
+                    {lote.precio_metro_cuadrado != null && (
+                      <div className="text-xs text-yellow-600">
                         {currency.format(Number(lote.precio_metro_cuadrado))} / m²
                       </div>
                     )}
