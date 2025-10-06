@@ -196,7 +196,7 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
                 </div>
 
                 {/* Precio destacado */}
-                {lote.estado === "1" || lote.estado === "2" ? (
+                {lote.estado === "1" ? (
                   <div className="
                     bg-gradient-to-r from-green-50 to-emerald-50 
                     border border-green-200 
