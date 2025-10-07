@@ -69,15 +69,9 @@ export default function AdminMapaPage(){
     
 
     return (
-        <div className="flex min-h-0 min-w-0 w-full h-screen relative overflow-hidden">
-            <div className="
-                w-full h-full min-h-0 overflow-hidden flex flex-col
-                sm:w-1/2
-                "
-                >
-                <AdminPanel codigo={selectedCodigo} />
-            </div>
-            <div className="w-full h-full min-h-0 overflow-hidden">
+        <div className="flex flex-col sm:flex-row min-h-0 min-w-0 w-full h-screen relative overflow-hidden">
+            {/* Mapa - En móvil va arriba, en sm+ a la derecha */}
+            <div className="w-full h-1/2 sm:h-full  min-h-0 overflow-hidden order-1 sm:order-2">
                 <MapaLotes  
                 lotes={lotes}
                 loading={loading}
@@ -86,7 +80,17 @@ export default function AdminMapaPage(){
                 selectedCodigo={selectedCodigo}
                 colorOverrides={{ "4": "#9ca3af", "5": "#e0e0e0" }}
                 />
-        </div>
+            </div>
+            
+            {/* Panel de administración - En móvil va abajo, en sm+ a la izquierda */}
+            <div className="
+                w-full h-1/2 sm:h-full sm:w-1/3 min-h-0 overflow-hidden flex flex-col
+                border-t sm:border-t-0 sm:border-r border-gray-200
+                order-2 sm:order-1
+                "
+                >
+                <AdminPanel codigo={selectedCodigo} />
+            </div>
         </div>
     )
 }
