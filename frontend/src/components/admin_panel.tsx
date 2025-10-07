@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../services/api";
 
 
@@ -139,7 +139,7 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
         if (isEditing){
             return (
                 <input
-                    className="w-full px-2 py-1 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm text-gray-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     type={type}
                     min={type === 'number' ? 0 : undefined}
                     value={draftValue}
@@ -151,14 +151,60 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
                         if (e.key === 'Escape') { closeEditor(); discardRow(l.codigo); }
                     }}
                     disabled={saving}
+                    placeholder={type === 'number' ? '0' : 'Ingresa texto...'}
                 />
             );
         }
         const pending = drafts[l.codigo]?.[field];
         const display = pending !== undefined ? pending : (l as any)[field];
         return (
-            <div onClick={() => startEdit(l, field)} className="cursor-text px-2 py-1 rounded hover:bg-blue-50/80 transition">
-                {display == null || display === '' ? '-' : String(display)}
+            <div 
+                onClick={() => startEdit(l, field)} 
+                className="cursor-text px-3 py-2 rounded-md hover:bg-blue-50/80 active:bg-blue-100/80 transition border border-transparent hover:border-blue-200 min-h-[40px] flex items-center touch-manipulation select-none"
+            >
+                <span className="text-gray-800 flex-1">
+                    {display == null || display === '' ? '-' : String(display)}
+                </span>
+                <span className="ml-2 text-gray-400 text-xs">✏️</span>
+            </div>
+        );
+    }
+
+    function renderEditableCellWithCurrency(l: Lote_admin, field: 'precio'|'precio_metro_cuadrado', type: 'number'|'text' = 'number'){
+        const isEditing = !!editing && editing.codigo === l.codigo && editing.field === field;
+        if (isEditing){
+            return (
+                <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm font-medium">S/.</span>
+                    <input
+                        className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm text-gray-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        type={type}
+                        min={type === 'number' ? 0 : undefined}
+                        value={draftValue}
+                        autoFocus
+                        onChange={(e) => { setDraftValue(e.target.value); updateDraft(l.codigo, field, e.target.value); }}
+                        onBlur={() => closeEditor()}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') closeEditor();
+                            if (e.key === 'Escape') { closeEditor(); discardRow(l.codigo); }
+                        }}
+                        disabled={saving}
+                        placeholder="0"
+                    />
+                </div>
+            );
+        }
+        const pending = drafts[l.codigo]?.[field];
+        const display = pending !== undefined ? pending : (l as any)[field];
+        return (
+            <div 
+                onClick={() => startEdit(l, field)} 
+                className="cursor-text px-3 py-2 rounded-md hover:bg-blue-50/80 active:bg-blue-100/80 transition border border-transparent hover:border-blue-200 min-h-[40px] flex items-center touch-manipulation select-none"
+            >
+                <span className="text-gray-800 flex-1">
+                    {display == null || display === '' ? '-' : `S/. ${String(display)}`}
+                </span>
+                <span className="ml-2 text-gray-400 text-xs">✏️</span>
             </div>
         );
     }
@@ -177,7 +223,7 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
         if (isEditing){
             return (
                 <select
-                    className="w-full px-2 py-1 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm text-gray-800"
                     value={draftValue}
                     autoFocus
                     onChange={(e) => { setDraftValue(e.target.value); updateDraft(l.codigo, 'estado', Number(e.target.value)); }}
@@ -188,40 +234,58 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
                     }}
                     disabled={saving}
                 >
-                    <option value="1">Disponible</option>
-                    <option value="2">Reservado</option>
-                    <option value="3">Vendido</option>
-                    <option value="4">Bloqueado</option>
-                    <option value="5">Bloque Comercial</option>
+                    <option value="1">🟢 Disponible</option>
+                    <option value="2">🟡 Reservado</option>
+                    <option value="3">🔴 Vendido</option>
+                    <option value="4">⚪ Bloqueado</option>
+                    <option value="5">⚪ Bloque Comercial</option>
                 </select>
             );
         }
         const pending = drafts[l.codigo]?.estado as number | undefined;
+        const currentEstado = pending !== undefined ? pending : l.estado;
+        const estadoEmoji = currentEstado === 1 ? '🟢' 
+            : currentEstado === 2 ? '🟡' 
+            : currentEstado === 3 ? '🔴'
+            : currentEstado === 4 ? '⚪'
+            : currentEstado === 5 ? '⚪'
+            : '🔴';
         return (
-            <div onClick={() => startEdit(l, 'estado')} className="cursor-pointer px-2 py-1 rounded hover:bg-blue-50/80 transition">
-                {estadoLabel(pending !== undefined ? pending : l.estado)}
+            <div 
+                onClick={() => startEdit(l, 'estado')} 
+                className="cursor-pointer px-3 py-2 rounded-md hover:bg-blue-50/80 active:bg-blue-100/80 transition border border-transparent hover:border-blue-200 min-h-[40px] flex items-center touch-manipulation select-none"
+            >
+                <span className="text-gray-800 flex-1">
+                    {estadoEmoji} {estadoLabel(currentEstado)}
+                </span>
+                <span className="ml-2 text-gray-400 text-xs">✏️</span>
             </div>
         );
     }
 
 
     if (!codigo) return (
-        <div className="max-w-auto mx-auto p-4">
-            <div className="bg-white/90 border border-gray-200 rounded-xl p-4 text-gray-600 shadow-sm">
-                Selecciona un lote en el mapa
+        <div className="h-full flex items-center justify-center p-4">
+            <div className="bg-white/90 border border-gray-200 rounded-xl p-6 text-gray-600 shadow-sm text-center">
+                <div className="text-4xl mb-2">📍</div>
+                <p className="text-sm sm:text-base">Selecciona un lote en el mapa</p>
             </div>
         </div>
     );
     if (loading) return (
-        <div className="max-w-6xl mx-auto p-4">
-            <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl p-4 shadow-sm">Cargando...</div>
+        <div className="h-full flex items-center justify-center p-4">
+            <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl p-6 shadow-sm text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-sm sm:text-base">Cargando...</p>
+            </div>
         </div>
     );
     if (error) return (
-        <div className="max-w-6xl mx-auto p-4">
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 flex items-center justify-between shadow-sm">
-                <span>Error: {error}</span>
-                <button onClick={() => cargarLotes(codigo ?? null)} className="px-3 py-1 rounded-md bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition">
+        <div className="h-full flex items-center justify-center p-4">
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-6 shadow-sm text-center max-w-sm">
+                <div className="text-4xl mb-2">⚠️</div>
+                <p className="text-sm mb-4">Error: {error}</p>
+                <button onClick={() => cargarLotes(codigo ?? null)} className="px-4 py-2 rounded-md bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition text-sm">
                     Reintentar
                 </button>
             </div>
@@ -230,76 +294,112 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
 
 
     return(
-
         <div className="h-full w-full flex flex-col">
             <div className="bg-white shadow-md border border-gray-200 overflow-hidden flex flex-col h-full">
-                <div className="px-4 py-3 bg-gradient-to-r from-blue-900 to-blue-700 text-white flex items-center justify-between">
-                    <h2 className="text-lg font-semibold">Administrador de Lotes</h2>
-                    <button onClick={() => cargarLotes(codigo)} className="px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/20 transition">
-                        Refrescar
+                {/* Header */}
+                <div className="px-3 sm:px-4 py-3 bg-gradient-to-r from-blue-900 to-blue-700 text-white flex items-center justify-between">
+                    <h2 className="text-sm sm:text-lg font-semibold">Administrador de Lotes</h2>
+                    <button 
+                        onClick={() => cargarLotes(codigo)} 
+                        className="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 active:bg-white/30 border border-white/20 transition text-xs sm:text-sm touch-manipulation min-h-[36px] flex items-center justify-center"
+                    >
+                        🔄 <span className="hidden md:inline ml-1">Refrescar</span>
                     </button>
                 </div>
-                <div className="p-4 overflow-auto flex-1">
-                    <table className="min-w-full text-sm">
-                        <tbody className="divide-y divide-gray-100 text-blue-900">
-                            {Array.isArray(lotes) && lotes.map((l) =>(
-                                <React.Fragment key={l.codigo}>
-                                    <tr className="hover:bg-blue-50/40">
-                                        <td className="text-left px-3 py-2 font-semibold">Código</td>
-                                        <td className="px-3 py-2 font-medium text-gray-800">{l.codigo}</td>
-                                    </tr>
-                                    <tr className="hover:bg-blue-50/40">
-                                        <td className="text-left px-3 py-2 font-semibold">Estado</td>
-                                        <td className="px-3 py-2">{renderEstadoCell(l)}</td>
-                                    </tr>
-                                    <tr className="hover:bg-blue-50/40">
-                                        <td className="text-left px-3 py-2 font-semibold">Área</td>
-                                        <td className="px-3 py-2">{renderEditableCell(l, 'area_lote', 'number')}</td>
-                                    </tr>
-                                    <tr className="hover:bg-blue-50/40">
-                                        <td className="text-left px-3 py-2 font-semibold">Perímetro</td>
-                                        <td className="px-3 py-2">{renderEditableCell(l, 'perimetro', 'number')}</td>
-                                    </tr>
-                                    <tr className="hover:bg-blue-50/40">
-                                        <td className="text-left px-3 py-2 font-semibold">Precio</td>
-                                        <td className="px-3 py-2">{renderEditableCell(l, 'precio', 'number')}</td>
-                                    </tr>
-                                    <tr className="hover:bg-blue-50/40">
-                                        <td className="text-left px-3 py-2 font-semibold">Precio Metro Cuadrado</td>
-                                        <td className="px-3 py-2">{renderEditableCell(l, 'precio_metro_cuadrado', 'number')}</td>
-                                    </tr>
-                                    <tr className="hover:bg-blue-50/40">
-                                        <td className="text-left px-3 py-2 font-semibold">Descripción</td>
-                                        <td className="px-3 py-2">{renderEditableCell(l, 'descripcion', 'text')}</td>
-                                    </tr>
-                                    <tr className="hover:bg-blue-50/40">
-                                        <td className="text-left px-3 py-2 font-semibold">Actualizado en</td>
-                                        <td className="px-3 py-2 text-gray-500">{new Date(l.actualizado_en).toLocaleString()}</td>
-                                    </tr>
-                                    <tr className="hover:bg-blue-50/40">
-                                        <td className="text-left px-3 py-2 font-semibold"></td>
-                                        <td className="px-3 py-2">
-                                            {hasDrafts(l.codigo) ? (
-                                                <div className="flex items-center gap-2">
-                                                    <button disabled={saving} onClick={() => saveRow(l.codigo)} className="px-3 py-1.5 rounded-md bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 disabled:opacity-60 disabled:cursor-not-allowed transition">
-                                                        Guardar
-                                                    </button>
-                                                    <button disabled={saving} onClick={() => discardRow(l.codigo)} className="px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed transition">
-                                                        Descartar
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-400">‎</span>
-                                            )}
-                                        </td>
-                                    </tr>
-                                </React.Fragment>
-                            ))}
-                        </tbody>
-                    </table>
+                
+                {/* Content */}
+                <div className="p-3 sm:p-4 overflow-auto flex-1">
+                    {Array.isArray(lotes) && lotes.map((l) => (
+                        <div key={l.codigo} className={`bg-gray-50 rounded-lg p-4 mb-4 border transition-all ${hasDrafts(l.codigo) ? 'border-orange-300 bg-orange-50/50 shadow-md' : 'border-gray-200'}`}>
+                            {/* Código del lote */}
+                            <div className="mb-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-lg font-bold text-blue-900">Lote {l.codigo}</h3>
+                                    {hasDrafts(l.codigo) && (
+                                        <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full flex items-center">
+                                            ⚠️ Cambios pendientes
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                    Actualizado: {new Date(l.actualizado_en).toLocaleString()}
+                                </div>
+                            </div>
+
+                            {/* Estado - Ocupa todo el ancho */}
+                            <div className="space-y-1 mb-4">
+                                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Estado</label>
+                                <div className="text-sm">
+                                    {renderEstadoCell(l)}
+                                </div>
+                            </div>
+
+                            {/* Grid de campos */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4">
+                                {/* Área */}
+                                <div className="space-y-1">
+                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Área (m²)</label>
+                                    <div className="text-sm">
+                                        {renderEditableCell(l, 'area_lote', 'number')}
+                                    </div>
+                                </div>
+
+                                {/* Perímetro */}
+                                <div className="space-y-1">
+                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Perímetro (m)</label>
+                                    <div className="text-sm">
+                                        {renderEditableCell(l, 'perimetro', 'number')}
+                                    </div>
+                                </div>
+
+                                {/* Precio */}
+                                <div className="space-y-1">
+                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Precio (S/.)</label>
+                                    <div className="text-sm">
+                                        {renderEditableCellWithCurrency(l, 'precio', 'number')}
+                                    </div>
+                                </div>
+
+                                {/* Precio por m² */}
+                                <div className="space-y-1">
+                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Precio m² (S/.)</label>
+                                    <div className="text-sm">
+                                        {renderEditableCellWithCurrency(l, 'precio_metro_cuadrado', 'number')}
+                                    </div>
+                                </div>
+
+                                {/* Descripción */}
+                                <div className="space-y-1 md:col-span-2">
+                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Descripción</label>
+                                    <div className="text-sm">
+                                        {renderEditableCell(l, 'descripcion', 'text')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Botones de acción */}
+                            {hasDrafts(l.codigo) && (
+                                <div className="flex flex-col md:flex-row gap-3 pt-4 border-t border-gray-200">
+                                    <button 
+                                        disabled={saving} 
+                                        onClick={() => saveRow(l.codigo)} 
+                                        className="flex-1 px-4 py-3 rounded-md bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 active:from-blue-800 active:to-blue-900 disabled:opacity-60 disabled:cursor-not-allowed transition text-sm font-medium touch-manipulation min-h-[44px] flex items-center justify-center"
+                                    >
+                                        {saving ? '⏳ Guardando...' : '💾 Guardar Cambios'}
+                                    </button>
+                                    <button 
+                                        disabled={saving} 
+                                        onClick={() => discardRow(l.codigo)} 
+                                        className="flex-1 px-4 py-3 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 active:bg-gray-100 disabled:opacity-60 disabled:cursor-not-allowed transition text-sm font-medium touch-manipulation min-h-[44px] flex items-center justify-center"
+                                    >
+                                        ❌ Descartar
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
-        
     )
 }
