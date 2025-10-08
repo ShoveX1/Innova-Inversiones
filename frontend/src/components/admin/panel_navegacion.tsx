@@ -2,11 +2,19 @@
 
 import { useState } from 'react';
 
-export default function PanelNavegacion() {
+
+
+interface PanelNavegacionProps{
+    onToggleSidebar?: (isCollapsed: boolean) => void;
+}
+
+export default function PanelNavegacion({onToggleSidebar}:PanelNavegacionProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     const toggleCollapse = () => {
-        setIsCollapsed(!isCollapsed);
+        const newState = !isCollapsed;
+        setIsCollapsed(newState);
+        if(onToggleSidebar) onToggleSidebar(newState);
     };
 
     return (

@@ -11,6 +11,13 @@ export interface Lote {
 
 export default function AdminMapaPage(){
 
+
+    const [showAdminPanel, setShowAdminPanel] = useState(true);
+
+    const handleToggleSidebar = (isCollapsed:boolean) => {
+        setShowAdminPanel(!isCollapsed);
+    }
+
     const [lotes, setLotes] = useState<Lote[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -73,15 +80,16 @@ export default function AdminMapaPage(){
         <div className="flex h-screen w-full">
             {/* Panel de Navegación - Siempre a la izquierda */}
             <div className="flex-shrink-0 h-screen flex">
-                <PanelNavegacion />
+                <PanelNavegacion onToggleSidebar={handleToggleSidebar} />
             </div>
             
-            {/* Contenido Principal */}
             <div className="flex-1 flex flex-col sm:flex-row min-h-0 overflow-hidden">
                 {/* Panel de administración - En móvil va arriba, en sm+ a la izquierda */}
+                {showAdminPanel &&(
                 <div className="w-full h-1/2 sm:h-full sm:w-1/3 min-h-0 overflow-hidden flex flex-col">
                     <AdminPanel codigo={selectedCodigo} />
                 </div>
+                )}
                 
                 {/* Mapa - En móvil va abajo, en sm+ a la derecha */}
                 <div className="w-full h-1/2 sm:h-full min-h-0 overflow-hidden">
