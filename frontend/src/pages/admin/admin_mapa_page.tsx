@@ -1,6 +1,7 @@
-import AdminPanel from "../components/admin_panel";
-import MapaLotes from "../components/mapa_lotes";
-import { api } from "../services/api";
+import AdminPanel from "../../components/admin/admin_panel";
+import MapaLotes from "../../components/mapa/mapa_lotes";
+import PanelNavegacion from "../../components/admin/panel_navegacion";
+import { api } from "../../services/api";
 import { useState, useEffect, useRef, useCallback } from "react";
 
 export interface Lote {
@@ -69,27 +70,30 @@ export default function AdminMapaPage(){
     
 
     return (
-        <div className="flex flex-col sm:flex-row min-h-0 min-w-0 w-full h-screen relative overflow-hidden">
-            {/* Mapa - En móvil va arriba, en sm+ a la derecha */}
-            <div className="w-full h-1/2 sm:h-full  min-h-0 overflow-hidden order-1 sm:order-2">
-                <MapaLotes  
-                lotes={lotes}
-                loading={loading}
-                error={error}
-                onSelectCodigo={setSelectedCodigo}
-                selectedCodigo={selectedCodigo}
-                colorOverrides={{ "4": "#9ca3af", "5": "#e0e0e0" }}
-                />
+        <div className="flex h-screen w-full">
+            {/* Panel de Navegación - Siempre a la izquierda */}
+            <div className="flex-shrink-0 h-screen flex">
+                <PanelNavegacion />
             </div>
             
-            {/* Panel de administración - En móvil va abajo, en sm+ a la izquierda */}
-            <div className="
-                w-full h-1/2 sm:h-full sm:w-1/3 min-h-0 overflow-hidden flex flex-col
-                border-t sm:border-t-0 sm:border-r border-gray-200
-                order-2 sm:order-1
-                "
-                >
-                <AdminPanel codigo={selectedCodigo} />
+            {/* Contenido Principal */}
+            <div className="flex-1 flex flex-col sm:flex-row min-h-0 overflow-hidden">
+                {/* Panel de administración - En móvil va arriba, en sm+ a la izquierda */}
+                <div className="w-full h-1/2 sm:h-full sm:w-1/3 min-h-0 overflow-hidden flex flex-col">
+                    <AdminPanel codigo={selectedCodigo} />
+                </div>
+                
+                {/* Mapa - En móvil va abajo, en sm+ a la derecha */}
+                <div className="w-full h-1/2 sm:h-full min-h-0 overflow-hidden">
+                    <MapaLotes  
+                        lotes={lotes}
+                        loading={loading}
+                        error={error}
+                        onSelectCodigo={setSelectedCodigo}
+                        selectedCodigo={selectedCodigo}
+                        colorOverrides={{ "4": "#9ca3af", "5": "#e0e0e0" }}
+                    />
+                </div>
             </div>
         </div>
     )
