@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api } from "../services/api";
+import { api } from "../../services/api";
 
 
 export interface Lote_admin{
@@ -295,7 +295,7 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
 
     return(
         <div className="h-full w-full flex flex-col">
-            <div className="bg-white shadow-md border border-gray-200 overflow-hidden flex flex-col h-full">
+            <div className="bg-white shadow-md overflow-hidden flex flex-col h-full">
                 {/* Header */}
                 <div className="px-3 sm:px-4 py-3 bg-gradient-to-r from-blue-900 to-blue-700 text-white flex items-center justify-between">
                     <h2 className="text-sm sm:text-lg font-semibold">Administrador de Lotes</h2>

@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { api } from "../services/api";
-import MapaLotes from "../components/mapa_lotes";
-import InfoPanel from "../components/info_panel";
+import { api } from "../../services/api";
+import MapaLotes from "../../components/mapa/mapa_lotes";
+import InfoPanel from "../../components/mapa/info_panel";
 
 export interface Lote {
   codigo: string;
