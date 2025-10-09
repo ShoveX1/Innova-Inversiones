@@ -88,6 +88,39 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
         }));
     }
 
+    // Mantiene sincronizados precio total y precio por m² cuando uno cambia
+    function updateLinkedPrices(row: Lote_admin, changedField: 'precio'|'precio_metro_cuadrado', rawValue: string){
+        // Determinar el área efectiva (borrador si existe, caso contrario el valor actual)
+        const pendingArea = drafts[row.codigo]?.area_lote;
+        const area = Number(pendingArea ?? row.area_lote);
+        const newValue = rawValue === '' ? NaN : Number(rawValue);
+
+        setDrafts(prev => {
+            const prevRow = prev[row.codigo] || {};
+            const nextRow: any = { ...prevRow, [changedField]: rawValue };
+
+            // Solo calcular el campo vinculado si área y valor son válidos
+            if (isFinite(area) && area > 0 && !Number.isNaN(newValue)){
+                if (changedField === 'precio'){
+                    const perM2 = Math.round((newValue / area) * 100) / 100;
+                    nextRow['precio_metro_cuadrado'] = perM2;
+                }else{ // precio_metro_cuadrado cambió
+                    const total = Math.round((newValue * area) * 100) / 100;
+                    nextRow['precio'] = total;
+                }
+            } else if (rawValue === ''){
+                // Si el usuario vacía el campo, el vinculado pasa a 0 por defecto
+                if (changedField === 'precio'){
+                    nextRow['precio_metro_cuadrado'] = 0;
+                }else{
+                    nextRow['precio'] = 0;
+                }
+            }
+
+            return { ...prev, [row.codigo]: nextRow };
+        });
+    }
+
     function hasDrafts(codigo: string){
         return !!drafts[codigo] && Object.keys(drafts[codigo] as object).length > 0;
     }
@@ -182,8 +215,20 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
                         min={type === 'number' ? 0 : undefined}
                         value={draftValue}
                         autoFocus
-                        onChange={(e) => { setDraftValue(e.target.value); updateDraft(l.codigo, field, e.target.value); }}
-                        onBlur={() => closeEditor()}
+                        onChange={(e) => { 
+                            const val = e.target.value; 
+                            setDraftValue(val);
+                            updateLinkedPrices(l, field, val);
+                        }}
+                        onBlur={() => {
+                            // Si queda vacío, forzamos 0 por defecto y recalculamos el vinculado
+                            if (draftValue === ''){
+                                const coerced = '0';
+                                setDraftValue(coerced);
+                                updateLinkedPrices(l, field, coerced);
+                            }
+                            closeEditor();
+                        }}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') closeEditor();
                             if (e.key === 'Escape') { closeEditor(); discardRow(l.codigo); }
@@ -202,7 +247,7 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
                 className="cursor-text px-3 py-2 rounded-md hover:bg-blue-50/80 active:bg-blue-100/80 transition border border-transparent hover:border-blue-200 min-h-[40px] flex items-center touch-manipulation select-none"
             >
                 <span className="text-gray-800 flex-1">
-                    {display == null || display === '' ? '-' : `S/. ${String(display)}`}
+                    {display == null || display === '' ? 'S/. 0' : `S/. ${String(display)}`}
                 </span>
                 <span className="ml-2 text-gray-400 text-xs">✏️</span>
             </div>
