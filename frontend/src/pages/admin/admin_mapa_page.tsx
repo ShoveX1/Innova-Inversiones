@@ -12,16 +12,14 @@ export interface Lote {
 export default function AdminMapaPage(){
 
 
-    const [showAdminPanel, setShowAdminPanel] = useState(true);
-
-    const handleToggleSidebar = (isCollapsed:boolean) => {
-        setShowAdminPanel(!isCollapsed);
-    }
+    // Eliminado: lógica que ocultaba AdminPanel al colapsar la barra lateral
 
     const [lotes, setLotes] = useState<Lote[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedCodigo, setSelectedCodigo] = useState<string | null>(null);
+    const [showAdminPanel, setShowAdminPanel] = useState<boolean>(true);
+    const [navCollapsed, setNavCollapsed] = useState<boolean>(false);
     const isMountedRef = useRef(true);
 
     const fetchLotes = useCallback(async () => {
@@ -77,30 +75,55 @@ export default function AdminMapaPage(){
     
 
     return (
-        <div className="flex h-screen w-full">
-            {/* Panel de Navegación - Siempre a la izquierda */}
-            <div className="flex-shrink-0 h-screen flex">
-                <PanelNavegacion onToggleSidebar={handleToggleSidebar} />
+        <div className="h-screen w-full">
+            {/* Panel de Navegación fijo */}
+            <div className={`fixed left-0 top-0 h-screen z-30 ${navCollapsed ? 'w-16' : 'w-[19rem]'}`}>
+                <PanelNavegacion onToggleSidebar={(isCollapsed:boolean) => setNavCollapsed(isCollapsed)} />
             </div>
-            
-            <div className="flex-1 flex flex-col sm:flex-row min-h-0 overflow-hidden">
-                {/* Panel de administración - En móvil va arriba, en sm+ a la izquierda */}
-                {showAdminPanel &&(
-                <div className="w-full h-1/2 sm:h-full sm:w-1/3 min-h-0 overflow-hidden flex flex-col">
-                    <AdminPanel codigo={selectedCodigo} />
+            {/* Contenido scrollable con margen según ancho del panel */}
+            <div className={`${navCollapsed ? 'ml-16' : 'ml-[19rem]'} h-screen overflow-auto`}>
+                <div className="bg-white shadow-md overflow-hidden flex flex-row justify-between">
+                    <div>
+                        <h1 className="text-transparent bg-clip-text 
+                            bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 
+                            font-extrabold tracking-tight text-3xl px-4
+                            sm:text-4xl md:text-5xl drop-shadow-sm mt-2">
+                            Plano de Lotes
+                        </h1>
+                        <p className="text-gray-500 text-sm px-4 mb-2">Las Bugambilias-1RA ETAPA</p>
+                    </div>
+                    <button 
+                        onClick={() => setShowAdminPanel(prev => !prev)}
+                        className="bg-blue-600 text-white mx-4 my-auto rounded-lg w-36 h-12 flex items-center justify-center"
+                    >
+                        <p>{showAdminPanel ? 'Cerrar Edición' : 'Editar Lotes'}</p>
+                    </button>
                 </div>
-                )}
-                
-                {/* Mapa - En móvil va abajo, en sm+ a la derecha */}
-                <div className="w-full h-1/2 sm:h-full min-h-0 overflow-hidden">
-                    <MapaLotes  
-                        lotes={lotes}
-                        loading={loading}
-                        error={error}
-                        onSelectCodigo={setSelectedCodigo}
-                        selectedCodigo={selectedCodigo}
-                        colorOverrides={{ "4": "#9ca3af", "5": "#e0e0e0" }}
-                    />
+                <div className="flex-1 flex flex-col sm:flex-row min-h-0 overflow-hidden">
+                    {/* Mapa - En móvil va abajo, en sm+ a la derecha */}
+                    <div className="
+                        sm:h-full 
+                        w-full h-1/2 min-h-0 overflow-hidden rounded-lg border border-gray-200
+                        m-4">
+                        <MapaLotes  
+                            lotes={lotes}
+                            loading={loading}
+                            error={error}
+                            onSelectCodigo={setSelectedCodigo}
+                            selectedCodigo={selectedCodigo}
+                            colorOverrides={{ "4": "#9ca3af", "5": "#e0e0e0" }}
+                        />
+                    </div>
+                    {/* Panel de administración - Toggle */}
+                    {showAdminPanel && (
+                        <div className=" 
+                            sm:h-full sm:w-1/3
+                            w-full h-1/2 m-4
+                            min-h-0 overflow-hidden flex flex-col rounded-lg">
+                            <AdminPanel codigo={selectedCodigo} />
+                        </div>
+                    )}
+                    
                 </div>
             </div>
         </div>

@@ -18,7 +18,7 @@ export default function PanelNavegacion({onToggleSidebar}:PanelNavegacionProps) 
     };
 
     return (
-        <div className={`bg-white shadow-md overflow-hidden flex flex-col h-min-full transition-all duration-300 ${isCollapsed ? 'max-w-16' : 'max-w-sm'}`}>
+        <div className={`bg-white shadow-md overflow-visible flex flex-col h-min-full h-full transition-all duration-300 ${isCollapsed ? 'max-w-16' : 'max-w-sm'}`}>
 
             {/* Header del Panel */}
             <div className={`px-5 py-4 bg-gradient-to-r from-blue-900 to-blue-700 text-white transition-all duration-300 ${isCollapsed ? 'px-2' : ''}`}>
@@ -27,28 +27,10 @@ export default function PanelNavegacion({onToggleSidebar}:PanelNavegacionProps) 
                         /* Estado colapsado - Solo logo */
                         <div className="flex flex-col items-center gap 2">
                             <img src="/logo_innova_blanco.svg" alt="Innova Inversiones" className="w-8 h-8" />
-                            <button 
-                                onClick={toggleCollapse}
-                                className="p-2 mt-2 hover:bg-white/10 rounded-lg transition-colors"
-                            >
-                                <svg 
-                                    className="w-5 h-5 text-white" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path 
-                                        strokeLinecap="round" 
-                                        strokeLinejoin="round" 
-                                        strokeWidth={2} 
-                                        d="M4 6h16M4 12h16M4 18h16" 
-                                    />
-                                </svg>
-                            </button>
                         </div>
                     ) : (
                         /* Estado expandido - Logo + texto + botón */
-                        <div className="w-full flex items-center justify-between">
+                        <div className="w-full flex items-center justify-start">
                             <div className="flex items-center space-x-3">
                                 <img src="/logo_innova_blanco.svg" alt="Innova Inversiones" className="w-8 h-8" />
                                 <div className="flex flex-col items-start">
@@ -56,32 +38,37 @@ export default function PanelNavegacion({onToggleSidebar}:PanelNavegacionProps) 
                                     <span className="text-xs">Las Bugambilias</span>
                                 </div>
                             </div>
-                            <button 
-                                onClick={toggleCollapse}
-                                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                            >
-                                <svg 
-                                    className="w-5 h-5 text-white" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path 
-                                        strokeLinecap="round" 
-                                        strokeLinejoin="round" 
-                                        strokeWidth={2} 
-                                        d="M4 6h16M4 12h16M4 18h16" 
-                                    />
-                                </svg>
-                            </button>
                         </div>
                     )}
                 </div>
             </div>
 
+            {/* Botón flotante centrado en el borde inferior del header */}
+            <div className="relative">
+                <button 
+                    onClick={toggleCollapse}
+                    className="absolute right-0 translate-x-1/2 -top-3 bg-white rounded-full shadow-lg hover:shadow-xl p-2 transition-all ring-1 ring-black/5"
+                    aria-label={isCollapsed ? 'Expandir panel' : 'Contraer panel'}
+                >
+                    <svg 
+                        className="w-5 h-5 text-blue-600" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                    >
+                        <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d="M4 6h16M4 12h16M4 18h16" 
+                        />
+                    </svg>
+                </button>
+            </div>
+
             {/* Contenido del Panel */}
-            <div className="flex-1 overflow-auto border-t border-gray-200 bg-gradient-to-r from-blue-900 to-blue-700 text-white h-min-full">
-                <div className={`flex flex-col gap-2 py-8 transition-all duration-300 ${isCollapsed ? 'px-2' : 'p-4'}`}>
+            <div className="flex-1 overflow-hidden border-t border-gray-200 bg-gradient-to-r from-blue-900 to-blue-700 text-white h-min-full">
+                <div className={`flex flex-col gap-2 pt-8 pb-8 transition-all duration-300 ${isCollapsed ? 'px-2' : 'p-4'}`}>
                     {/* Plano de Lotes */}
                     <div className={`py-4 flex items-center hover:bg-white/10 rounded-lg transition-all duration-200 cursor-pointer ${isCollapsed ? 'justify-center' : 'ps-2 flex-row gap-4'}`}>
                         <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
