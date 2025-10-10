@@ -145,6 +145,7 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
                 className="
                   p-1 sm:p-1 
                   hover:bg-white/20 
+                  bg-blue-600
                   rounded 
                   transition-colors
                 "
