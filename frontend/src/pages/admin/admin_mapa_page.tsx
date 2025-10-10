@@ -1,13 +1,21 @@
 import AdminPanel from "../../components/admin/admin_panel";
 import MapaLotes from "../../components/mapa/mapa_lotes";
 import PanelNavegacion from "../../components/admin/panel_navegacion";
+import InfoPanel from "../../components/mapa/info_panel";
 import { api } from "../../services/api";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 export interface Lote {
     codigo: string;
-    estado: string; 
-  }
+    estado: string;
+    manzana: string;
+    lote_numero: string;
+    area_lote: number;
+    precio: number | null;
+    precio_metro_cuadrado: number | null;
+    estado_nombre: string;
+    descripcion: string | null;
+}
 
 export default function AdminMapaPage(){
 
@@ -18,8 +26,9 @@ export default function AdminMapaPage(){
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedCodigo, setSelectedCodigo] = useState<string | null>(null);
-    const [showAdminPanel, setShowAdminPanel] = useState<boolean>(true);
+    const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
     const [navCollapsed, setNavCollapsed] = useState<boolean>(false);
+    const [showInfoPanel, setShowInfoPanel] = useState<boolean>(false);
     const isMountedRef = useRef(true);
 
     const fetchLotes = useCallback(async () => {
@@ -27,7 +36,12 @@ export default function AdminMapaPage(){
         setError(null);
         const data = await api.get('api/maps/lotes/');
         if (!isMountedRef.current) return;
-        setLotes(data as Lote[]);
+        // Asegurar campo precio_metro_cuadrado para InfoPanel
+        const mapped = (data as any[]).map((d) => ({
+            ...d,
+            precio_metro_cuadrado: d?.precio_metro_cuadrado ?? null,
+        })) as Lote[];
+        setLotes(mapped);
         } catch (e: any) {
         if (!isMountedRef.current) return;
         setError(e?.message ?? "Error al cargar lotes");
@@ -74,6 +88,15 @@ export default function AdminMapaPage(){
 
     
 
+    // Al seleccionar un lote, volvemos a mostrar el InfoPanel
+    useEffect(() => {
+        if (selectedCodigo) setShowInfoPanel(true);
+    }, [selectedCodigo]);
+
+    const selectedLote = useMemo(() => {
+        return lotes.find(l => l.codigo === selectedCodigo) ?? null;
+    }, [lotes, selectedCodigo]);
+
     return (
         <div className="h-screen w-full">
             {/* Panel de Navegación fijo */}
@@ -102,7 +125,7 @@ export default function AdminMapaPage(){
                 <div className="flex-1 flex flex-col sm:flex-row min-h-0 overflow-hidden">
                     {/* Mapa - En móvil va abajo, en sm+ a la derecha */}
                     <div className="
-                        sm:h-full 
+                        sm:h-full
                         w-full h-1/2 min-h-0 overflow-hidden rounded-lg border border-gray-200
                         m-4">
                         <MapaLotes  
@@ -113,6 +136,15 @@ export default function AdminMapaPage(){
                             selectedCodigo={selectedCodigo}
                             colorOverrides={{ "4": "#9ca3af", "5": "#e0e0e0" }}
                         />
+                        {/* Info Panel superpuesto */}
+                        {showInfoPanel && (
+                            <InfoPanel 
+                                loading={loading}
+                                error={error}
+                                lote={selectedLote}
+                                onClose={() => setShowInfoPanel(false)}
+                            />
+                        )}
                     </div>
                     {/* Panel de administración - Toggle */}
                     {showAdminPanel && (
@@ -120,7 +152,7 @@ export default function AdminMapaPage(){
                             sm:h-full sm:w-1/3
                             w-full h-1/2 m-4
                             min-h-0 overflow-hidden flex flex-col rounded-lg">
-                            <AdminPanel codigo={selectedCodigo} />
+                            <AdminPanel codigo={selectedCodigo} onClose={() => setShowAdminPanel(false)} />
                         </div>
                     )}
                     

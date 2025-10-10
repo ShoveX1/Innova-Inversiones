@@ -13,7 +13,8 @@ export interface Lote_admin{
     actualizado_en: string;
 };
 
-export default function AdminPanel({ codigo }: { codigo?: string | null }){
+type AdminPanelProps = { codigo?: string | null; onClose?: () => void };
+export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
     const [lotes, setLotes] = useState<Lote_admin[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -344,12 +345,15 @@ export default function AdminPanel({ codigo }: { codigo?: string | null }){
                 {/* Header */}
                 <div className="px-3 sm:px-4 py-3 bg-gradient-to-r from-blue-900 to-blue-700 text-white flex items-center justify-between">
                     <h2 className="text-sm sm:text-lg font-semibold">Administrador de Lotes</h2>
-                    <button 
-                        onClick={() => cargarLotes(codigo)} 
-                        className="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 active:bg-white/30 border border-white/20 transition text-xs sm:text-sm touch-manipulation min-h-[36px] flex items-center justify-center"
-                    >
-                        🔄 <span className="hidden md:inline ml-1">Refrescar</span>
-                    </button>
+                    {onClose && (
+                        <button 
+                            onClick={onClose} 
+                            aria-label="Cerrar panel"
+                            className="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 active:bg-white/30 border border-white/20 transition text-xs sm:text-sm touch-manipulation min-h-[36px] flex items-center justify-center"
+                        >
+                            ✕
+                        </button>
+                    )}
                 </div>
                 
                 {/* Content */}
