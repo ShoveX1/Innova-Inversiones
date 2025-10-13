@@ -215,7 +215,7 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
                     )}
                   </div>
                 ) :
-                lote.estado === "2" ? (
+                lote.estado === "2" || lote.estado === "6" ? (
                   <div className="
                     bg-gradient-to-r from-yellow-50 to-amber-50 
                     border border-yellow-200 

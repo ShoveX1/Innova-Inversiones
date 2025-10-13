@@ -191,6 +191,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     "3": "#ef4444", // Rojo - Vendido
     "4": "#ef4444", // Rojo - Bloqueado
     "5": "#ef4444", // Rojo - Bloqueo Comercial
+    "6": "#facc15", // Amarillo - Reserva comercial
     ...(colorOverrides || {})
   }), [colorOverrides]);
 

@@ -285,6 +285,7 @@ export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
                     <option value="3">🔴 Vendido</option>
                     <option value="4">⚪ Bloqueado</option>
                     <option value="5">⚪ Bloque Comercial</option>
+                    <option value="6">🟤 Reserva comercial</option>
                 </select>
             );
         }
@@ -295,6 +296,7 @@ export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
             : currentEstado === 3 ? '🔴'
             : currentEstado === 4 ? '⚪'
             : currentEstado === 5 ? '⚪'
+            : currentEstado === 6 ? '🟤'
             : '🔴';
         return (
             <div 
