@@ -134,7 +134,7 @@ export default function AdminMapaPage(){
                             error={error}
                             onSelectCodigo={setSelectedCodigo}
                             selectedCodigo={selectedCodigo}
-                            colorOverrides={{ "4": "#9ca3af", "5": "#e0e0e0" }}
+                            colorOverrides={{ "4": "#9ca3af", "5": "#e0e0e0", "6": "#d97706"}}
                         />
                         {/* Info Panel superpuesto */}
                         {showInfoPanel && (
