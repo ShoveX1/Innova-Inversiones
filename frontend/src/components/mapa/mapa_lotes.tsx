@@ -207,9 +207,15 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     
     elements.forEach((el) => {
       const lote = lotesMap.get(el.id);
-      if (lote) {
-        // Aplicar color según el estado del lote
-        el.setAttribute('fill', colorMap[lote.estado as keyof typeof colorMap] || "#ffffff");
+        if (lote) {
+          // Aplicar color según el estado del lote
+          const color = colorMap[lote.estado as keyof typeof colorMap] || "#ffffff";
+          console.log(`🎨 Coloreando ${el.id} con ${color} (estado: ${lote.estado})`);
+          el.setAttribute('fill', color);
+          // Forzar el color también en el estilo CSS
+          (el as SVGElement).style.fill = color;
+          // Remover cualquier clase que pueda estar sobrescribiendo el color
+          el.removeAttribute('class');
         
         // Determinar el borde según si está seleccionado
         const isSelected = selectedLote === lote.codigo;
@@ -930,7 +936,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
           <object
             ref={objectRef}
             type="image/svg+xml"
-            data={`${import.meta.env.BASE_URL}planovirtual-1_edit_ids.svg`}
+            data={`${import.meta.env.BASE_URL}planovirtual-1_edit_ids ACTUALIZADO.svg`}
             className="w-full h-full object-contain"
             onLoad={handleSvgLoad}
           />
