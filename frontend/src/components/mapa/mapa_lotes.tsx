@@ -88,7 +88,37 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
   const selectCodigo = useCallback((codigo: string) => {
     setSelectedLote(codigo);
     onSelectCodigo(codigo);
-  }, [onSelectCodigo]);
+    
+    // Zoom automático del 50% al lote seleccionado
+    const svgDoc = objectRef.current?.contentDocument;
+    if (svgDoc) {
+      const loteElement = svgDoc.getElementById(codigo);
+      if (loteElement) {
+        try {
+          // Obtener el bounding box del lote
+          const svgElement = loteElement as unknown as SVGGraphicsElement;
+          const bbox = svgElement.getBBox();
+          
+          // Calcular el centro del lote
+          const centerX = bbox.x + bbox.width / 2;
+          const centerY = bbox.y + bbox.height / 2;
+          
+          // Calcular el nuevo viewBox con zoom del 50% (factor 0.5)
+          const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
+          const newWidth = current.w * 0.5; // 50% del ancho actual
+          const newHeight = current.h * 0.5; // 50% del alto actual
+          const newX = centerX - newWidth / 2;
+          const newY = centerY - newHeight / 2;
+          
+          // Aplicar el zoom centrado en el lote
+          setSvgViewBox({ x: newX, y: newY, w: newWidth, h: newHeight });
+          setScale(2); // 200% = 50% del viewBox original
+        } catch (error) {
+          console.warn('Error al hacer zoom al lote:', error);
+        }
+      }
+    }
+  }, [onSelectCodigo, setSvgViewBox]);
 
   const handleClick = (e: React.MouseEvent<SVGPathElement>) => {
     const codigo = (e.currentTarget as SVGPathElement).dataset.codigo;
@@ -104,15 +134,17 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     const currentScale = scaleRef.current;
     const newScale = currentScale * factor;
     
-    // Límite máximo: 500% (5x)
-    if (newScale > 5) return;
+    // Límite máximo: 500% (5x) - usar Math.min para limitar correctamente
+    const clampedScale = Math.min(newScale, 5);
+    if (clampedScale <= currentScale) return; // No hacer zoom si ya está en el máximo
     
-    const newW = current.w / factor;
-    const newH = current.h / factor;
+    const actualFactor = clampedScale / currentScale;
+    const newW = current.w / actualFactor;
+    const newH = current.h / actualFactor;
     const newX = current.x + (current.w - newW) / 2;
     const newY = current.y + (current.h - newH) / 2;
     setSvgViewBox({ x: newX, y: newY, w: newW, h: newH });
-    setScale(newScale);
+    setScale(clampedScale);
   };
 
   const handleZoomOut = () => {
