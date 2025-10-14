@@ -21,7 +21,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<MapaPage />} />
           <Route path="/admin" element={<AdminMapaPage />} />
-          <Route path="/admin2" element={<AdminMapaPagePerspectiva />} />
+          <Route path="/plano-perspectiva" element={<AdminMapaPagePerspectiva />} />
             {/* Rutas adicionales para navegación del panel */}
           <Route path="/admin" element={<div className="p-6">Dashboard (en construcción)</div>} />
           <Route path="/admin" element={<div className="p-6">Gestión de Clientes (en construcción)</div>} />
