@@ -3,6 +3,7 @@ import './App.css'
 import MapaPage from './pages/public/mapa_page.tsx'
 import Header from './components/common/Header.tsx'
 import AdminMapaPage from './pages/admin/admin_mapa_page.tsx'
+import AdminMapaPagePerspectiva from './pages/admin/admin_mapa_page_perspectiva.tsx'
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 
 function AppContent() {
@@ -20,6 +21,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<MapaPage />} />
           <Route path="/admin" element={<AdminMapaPage />} />
+          <Route path="/admin2" element={<AdminMapaPagePerspectiva />} />
             {/* Rutas adicionales para navegación del panel */}
           <Route path="/admin" element={<div className="p-6">Dashboard (en construcción)</div>} />
           <Route path="/admin" element={<div className="p-6">Gestión de Clientes (en construcción)</div>} />
