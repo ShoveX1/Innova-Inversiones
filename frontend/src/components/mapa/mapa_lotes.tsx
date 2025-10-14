@@ -937,7 +937,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
           <object
             ref={objectRef}
             type="image/svg+xml"
-            data={`${import.meta.env.BASE_URL}planovirtual-1_edit_ids ACTUALIZADO.svg`}
+            data={`${import.meta.env.BASE_URL}path30.svg`}
             className="w-full h-full object-contain"
             onLoad={handleSvgLoad}
           />
