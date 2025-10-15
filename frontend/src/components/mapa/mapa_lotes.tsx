@@ -104,15 +104,17 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     const currentScale = scaleRef.current;
     const newScale = currentScale * factor;
     
-    // Límite máximo: 500% (5x)
-    if (newScale > 5) return;
+    // Límite máximo: 500% (5x) - usar Math.min para limitar correctamente
+    const clampedScale = Math.min(newScale, 5);
+    if (clampedScale <= currentScale) return; // No hacer zoom si ya está en el máximo
     
-    const newW = current.w / factor;
-    const newH = current.h / factor;
+    const actualFactor = clampedScale / currentScale;
+    const newW = current.w / actualFactor;
+    const newH = current.h / actualFactor;
     const newX = current.x + (current.w - newW) / 2;
     const newY = current.y + (current.h - newH) / 2;
     setSvgViewBox({ x: newX, y: newY, w: newW, h: newH });
-    setScale(newScale);
+    setScale(clampedScale);
   };
 
   const handleZoomOut = () => {
@@ -186,14 +188,27 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
 
   // Memoizar el mapeo de colores para evitar recálculos
   const colorMap = useMemo(() => ({
-    "1": "#4ade80", // Verde - Disponible
-    "2": "#facc15", // Amarillo - Reservado
-    "3": "#ef4444", // Rojo - Vendido
-    "4": "#ef4444", // Rojo - Bloqueado
-    "5": "#ef4444", // Rojo - Bloqueo Comercial
-    "6": "#facc15", // Amarillo - Reserva comercial
+    "1": "#f5cdadff", // beige - Disponible
+    "2": "#fff200ff", // Amarillo - Reservado
+    "3": "#ef1688ff", // morado - Vendido
+    "4": "#ef1688ff", // morado - Bloqueado
+    "5": "#ef1688ff", // morado - Bloqueo Comercial
+    "6": "#fff200ff", // Amarillo - Reserva comercial
     ...(colorOverrides || {})
   }), [colorOverrides]);
+
+  // Contadores de lotes por estado
+  const contadores = useMemo(() => {
+    const contador1 = lotes.filter(lote => lote.estado === "1").length; // Disponible
+    const contador2 = lotes.filter(lote => ["2", "6"].includes(lote.estado)).length; // Reservado + Reserva comercial
+    const contador3 = lotes.filter(lote => ["3", "4", "5"].includes(lote.estado)).length; // Vendido + Bloqueado + Bloqueo Comercial
+    
+    return {
+      disponible: contador1,
+      reservado: contador2,
+      vendido: contador3
+    };
+  }, [lotes]);
 
   // Función optimizada para aplicar colores al SVG
   const applyColors = useCallback((svgDoc: Document, lotesData: Lote[]) => {
@@ -315,12 +330,28 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
               while (hoverOverlay.firstChild) hoverOverlay.removeChild(hoverOverlay.firstChild);
               const clone = (el as SVGElement).cloneNode(true) as SVGElement;
               const applyStrokeOnly = (node: Element) => {
-                (node as SVGElement).setAttribute('fill', 'none');
-                (node as SVGElement).setAttribute('stroke', '#6b7280');
-                (node as SVGElement).setAttribute('stroke-width', '3');
-                (node as SVGElement).setAttribute('vector-effect', 'non-scaling-stroke');
-                (node as SVGElement).setAttribute('stroke-linejoin', 'round');
-                (node as SVGElement).setAttribute('stroke-linecap', 'round');
+                const svgNode = node as SVGElement;
+                // Aplicar fill: none tanto como atributo como estilo CSS
+                svgNode.setAttribute('fill', 'none');
+                svgNode.style.fill = 'none';
+                // Asegurar que no haya fill en el estilo
+                svgNode.style.setProperty('fill', 'none', 'important');
+                
+                // Aplicar el stroke
+                svgNode.setAttribute('stroke', '#6b7280');
+                svgNode.setAttribute('stroke-width', '3');
+                svgNode.setAttribute('vector-effect', 'non-scaling-stroke');
+                svgNode.setAttribute('stroke-linejoin', 'round');
+                svgNode.setAttribute('stroke-linecap', 'round');
+                
+                // Aplicar también como estilo CSS para mayor seguridad
+                svgNode.style.stroke = '#6b7280';
+                svgNode.style.strokeWidth = '3px';
+                svgNode.style.vectorEffect = 'non-scaling-stroke';
+                svgNode.style.strokeLinejoin = 'round';
+                svgNode.style.strokeLinecap = 'round';
+                
+                // Procesar recursivamente todos los hijos
                 const children = node.children;
                 for (let i = 0; i < children.length; i++) {
                   applyStrokeOnly(children[i]);
@@ -370,14 +401,30 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
           const selectedEl = svgDoc.getElementById(selectedLote) as SVGElement | null;
           if (selectedEl) {
             const clone = selectedEl.cloneNode(true) as SVGElement;
-            // Forzar que solo sea borde visible en todo el árbol clonado
+            // Solo aplicar borde al overlay (transparente)
             const applyStrokeOnly = (node: Element) => {
-              (node as SVGElement).setAttribute('fill', 'none');
-              (node as SVGElement).setAttribute('stroke', '#000000');
-              (node as SVGElement).setAttribute('stroke-width', '4');
-              (node as SVGElement).setAttribute('vector-effect', 'non-scaling-stroke');
-              (node as SVGElement).setAttribute('stroke-linejoin', 'round');
-              (node as SVGElement).setAttribute('stroke-linecap', 'round');
+              const svgNode = node as SVGElement;
+              // Aplicar fill: none tanto como atributo como estilo CSS
+              svgNode.setAttribute('fill', 'none');
+              svgNode.style.fill = 'none';
+              // Asegurar que no haya fill en el estilo
+              svgNode.style.setProperty('fill', 'none', 'important');
+              
+              // Aplicar el stroke (borde negro)
+              svgNode.setAttribute('stroke', '#000000');
+              svgNode.setAttribute('stroke-width', '4');
+              svgNode.setAttribute('vector-effect', 'non-scaling-stroke');
+              svgNode.setAttribute('stroke-linejoin', 'round');
+              svgNode.setAttribute('stroke-linecap', 'round');
+              
+              // Aplicar también como estilo CSS para mayor seguridad
+              svgNode.style.stroke = '#000000';
+              svgNode.style.strokeWidth = '4px';
+              svgNode.style.vectorEffect = 'non-scaling-stroke';
+              svgNode.style.strokeLinejoin = 'round';
+              svgNode.style.strokeLinecap = 'round';
+              
+              // Procesar recursivamente todos los hijos
               const children = node.children;
               for (let i = 0; i < children.length; i++) {
                 applyStrokeOnly(children[i]);
@@ -395,8 +442,27 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       // console.warn('No se pudo actualizar overlay de selección:', e);
     }
 
+    // Actualizar contadores en el SVG
+    try {
+      const contadorDisponibles = svgDoc.getElementById('contador-disponibles');
+      const contadorReservados = svgDoc.getElementById('contador-separados');
+      const contadorVendidos = svgDoc.getElementById('contador-vendidos');
+      
+      if (contadorDisponibles) {
+        contadorDisponibles.textContent = contadores.disponible.toString().padStart(3, '0');
+      }
+      if (contadorReservados) {
+        contadorReservados.textContent = contadores.reservado.toString().padStart(3, '0');
+      }
+      if (contadorVendidos) {
+        contadorVendidos.textContent = contadores.vendido.toString().padStart(3, '0');
+      }
+    } catch (e) {
+      console.warn('Error al actualizar contadores en SVG:', e);
+    }
+
     // console.debug(`Colores aplicados: ${appliedCount} lotes encontrados`);
-  }, [colorMap, selectedLote]);
+  }, [colorMap, selectedLote, contadores]);
 
   // Cargar datos del backend
 
@@ -937,7 +1003,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
           <object
             ref={objectRef}
             type="image/svg+xml"
-            data={`${import.meta.env.BASE_URL}path30.svg`}
+            data={`${import.meta.env.BASE_URL}planovirtual-IDs-2.svg`}
             className="w-full h-full object-contain"
             onLoad={handleSvgLoad}
           />

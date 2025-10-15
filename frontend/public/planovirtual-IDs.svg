@@ -10,9 +10,30 @@
    xml:space="preserve"
    width="1190.6"
    height="841.90002"
+   sodipodi:docname="planovirtual-IDs.svg"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg"><defs
+   xmlns:svg="http://www.w3.org/2000/svg"><sodipodi:namedview
+   id="namedview1"
+   pagecolor="#505050"
+   bordercolor="#eeeeee"
+   borderopacity="1"
+   inkscape:showpageshadow="0"
+   inkscape:pageopacity="0"
+   inkscape:pagecheckerboard="0"
+   inkscape:deskcolor="#505050"
+   inkscape:zoom="0.53333269"
+   inkscape:cx="525.00063"
+   inkscape:cy="477.18807"
+   inkscape:window-width="1600"
+   inkscape:window-height="837"
+   inkscape:window-x="-8"
+   inkscape:window-y="-8"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="g3404" /><defs
    id="defs3433" />
 <style
    type="text/css"
@@ -15877,7 +15898,34 @@
 	<path
    id="path97_00000163054927197241947840000005725481614211538615_"
    class="st184"
-   d="m 224.9,767.8 h -38.1 c -2.9,0 -5.2,-5.5 -5.2,-12.3 0,-6.8 2.3,-12.3 5.2,-12.3 h 38.1 c 2.9,0 5.2,5.5 5.2,12.3 0,6.8 -2.4,12.3 -5.2,12.3 z" />
+   d="m 224.9,767.8 h -38.1 c -2.9,0 -5.2,-5.5 -5.2,-12.3 0,-6.8 2.3,-12.3 5.2,-12.3 h 38.1 c 2.9,0 5.2,5.5 5.2,12.3 0,6.8 -2.4,12.3 -5.2,12.3 z" /><text
+   xml:space="preserve"
+   style="text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000"
+   x="198.21524"
+   y="759.85938"
+   id="contador-disponibles"><tspan
+     sodipodi:role="line"
+     id="tspan1"
+     x="198.21524"
+     y="759.85938">00</tspan></text><text
+   xml:space="preserve"
+   style="text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000"
+   x="321.21524"
+   y="759.85938"
+   id="contador-separados"><tspan
+     sodipodi:role="line"
+     id="tspan1-8"
+     x="321.21524"
+     y="759.85938">00</tspan></text><text
+   xml:space="preserve"
+   style="text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000"
+   x="437.01523"
+   y="759.85938"
+   id="contador-vendidos"><tspan
+     sodipodi:role="line"
+     id="tspan1-1"
+     x="437.01523"
+     y="759.85938">00</tspan></text>
 	<g
    id="g3403">
 		<path
