@@ -1,9 +1,12 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import LoteInfoPanel from './LoteInfoPanel';
 
 
 interface Lote {
   codigo: string;
   estado: string;
+  area_lote: number;
+  precio: number | null;
 }
 
 type Props = { 
@@ -19,7 +22,6 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
   const objectRef = useRef<HTMLObjectElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [svgLoaded, setSvgLoaded] = useState(false);
-  const [scale, setScale] = useState(1);
   // Deprecated translate states (reemplazado por viewBox). Eliminados para evitar inconsistencias.
   const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
   const [svgNaturalSize, setSvgNaturalSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
@@ -34,9 +36,16 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
   const containerTapStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const panFrameRef = useRef<number | null>(null);
   const isPanningRef = useRef(false);
-  const scaleRef = useRef(1);
   const baseViewBoxRef = useRef<{ x: number; y: number; w: number; h: number }>({ x: 0, y: 0, w: 0, h: 0 });
   const viewBoxRef = useRef<{ x: number; y: number; w: number; h: number }>({ x: 0, y: 0, w: 0, h: 0 });
+  
+  // Sistema centralizado de zoom (única fuente de verdad)
+  const [currentZoom, setCurrentZoom] = useState(1);
+  const currentZoomRef = useRef(1);
+  
+  // Estados para el panel de información del lote
+  const [hoveredLote, setHoveredLote] = useState<Lote | null>(null);
+  const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | null>(null);
 
   const getSvgEl = useCallback(() => {
     return objectRef.current?.contentDocument?.querySelector('svg') as SVGSVGElement | null;
@@ -48,6 +57,39 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     svgEl.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
     viewBoxRef.current = vb;
   }, [getSvgEl]);
+
+  // Función centralizada para aplicar zoom
+  const applyZoom = useCallback((newZoom: number, centerX?: number, centerY?: number) => {
+    const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
+    
+    // Calcular el nuevo viewBox basado en el zoom base
+    // Para zoom in (mayor zoom): viewBox más pequeño
+    // Para zoom out (menor zoom): viewBox más grande
+    const baseWidth = baseViewBoxRef.current.w;
+    const baseHeight = baseViewBoxRef.current.h;
+    const newWidth = baseWidth / newZoom;
+    const newHeight = baseHeight / newZoom;
+    
+    let newX = current.x;
+    let newY = current.y;
+    
+    // Si se proporciona un centro, centrar el zoom en ese punto
+    if (centerX !== undefined && centerY !== undefined) {
+      newX = centerX - newWidth / 2;
+      newY = centerY - newHeight / 2;
+    } else {
+      // Si no se proporciona centro, centrar en el centro actual del viewBox
+      const centerCurrentX = current.x + current.w / 2;
+      const centerCurrentY = current.y + current.h / 2;
+      newX = centerCurrentX - newWidth / 2;
+      newY = centerCurrentY - newHeight / 2;
+    }
+    
+    // Aplicar el zoom
+    setSvgViewBox({ x: newX, y: newY, w: newWidth, h: newHeight });
+    setCurrentZoom(newZoom);
+    currentZoomRef.current = newZoom;
+  }, [setSvgViewBox]);
 
   // Helper: zoom en un punto de pantalla (clientX/clientY) con límites y centrado
   const zoomAtClientPoint = useCallback((clientX: number, clientY: number, direction: 'in' | 'out' = 'in') => {
@@ -61,22 +103,24 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     const factor = direction === 'in' ? 1.2 : 1 / 1.2;
     const minScale = 1;
     const maxScale = 5;
-    const nextScale = Math.max(minScale, Math.min(maxScale, scaleRef.current * factor));
-    if (nextScale === scaleRef.current) return;
+    const currentZoomValue = currentZoomRef.current;
+    const nextScale = Math.max(minScale, Math.min(maxScale, currentZoomValue * factor));
+    if (nextScale === currentZoomValue) return;
 
+    // Calcular el nuevo viewBox centrado en el punto
     const base = baseViewBoxRef.current;
     const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : base;
-    const zoomRatio = scaleRef.current / nextScale;
+    const zoomRatio = currentZoomValue / nextScale;
     const newW = current.w * zoomRatio;
     const newH = current.h * zoomRatio;
     const newX = svgPt.x - (svgPt.x - current.x) * (newW / current.w);
     const newY = svgPt.y - (svgPt.y - current.y) * (newH / current.h);
+    
     setSvgViewBox({ x: newX, y: newY, w: newW, h: newH });
-    setScale(nextScale);
+    setCurrentZoom(nextScale);
+    currentZoomRef.current = nextScale;
   }, [getSvgEl, setSvgViewBox]);
 
-  // Mantener refs simples (para wheel/dblclick)
-  useEffect(() => { scaleRef.current = scale; }, [scale]);
 
   // Mantener ref de pan actualizado para listeners nativos
   useEffect(() => { isPanningRef.current = isPanning; }, [isPanning]);
@@ -88,7 +132,35 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
   const selectCodigo = useCallback((codigo: string) => {
     setSelectedLote(codigo);
     onSelectCodigo(codigo);
-  }, [onSelectCodigo]);
+    
+    // Zoom automático al lote seleccionado
+    const svgDoc = objectRef.current?.contentDocument;
+    if (svgDoc) {
+      const loteElement = svgDoc.getElementById(codigo);
+      if (loteElement) {
+        try {
+          // Obtener el bounding box del lote
+          const svgElement = loteElement as unknown as SVGGraphicsElement;
+          const bbox = svgElement.getBBox();
+          
+          // Calcular el centro del lote
+          const centerX = bbox.x + bbox.width / 2;
+          const centerY = bbox.y + bbox.height / 2;
+          
+          // Zoom objetivo: 300%
+          const targetZoom = 3;
+          const currentZoomValue = currentZoomRef.current;
+          
+          // Solo hacer zoom si el zoom actual es menor al objetivo
+          if (currentZoomValue < targetZoom) {
+            applyZoom(targetZoom, centerX, centerY);
+          }
+        } catch (error) {
+          console.warn('Error al hacer zoom al lote:', error);
+        }
+      }
+    }
+  }, [onSelectCodigo, applyZoom]);
 
   const handleClick = (e: React.MouseEvent<SVGPathElement>) => {
     const codigo = (e.currentTarget as SVGPathElement).dataset.codigo;
@@ -99,46 +171,34 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
 
   // Funciones para manejar el zoom con botones
   const handleZoomIn = () => {
-    const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
+    const currentZoomValue = currentZoomRef.current;
     const factor = 1.2;
-    const currentScale = scaleRef.current;
-    const newScale = currentScale * factor;
+    const newZoom = currentZoomValue * factor;
     
-    // Límite máximo: 500% (5x) - usar Math.min para limitar correctamente
-    const clampedScale = Math.min(newScale, 5);
-    if (clampedScale <= currentScale) return; // No hacer zoom si ya está en el máximo
+    // Límite máximo: 500% (5x)
+    const clampedZoom = Math.min(newZoom, 5);
+    if (clampedZoom <= currentZoomValue) return; // No hacer zoom si ya está en el máximo
     
-    const actualFactor = clampedScale / currentScale;
-    const newW = current.w / actualFactor;
-    const newH = current.h / actualFactor;
-    const newX = current.x + (current.w - newW) / 2;
-    const newY = current.y + (current.h - newH) / 2;
-    setSvgViewBox({ x: newX, y: newY, w: newW, h: newH });
-    setScale(clampedScale);
+    applyZoom(clampedZoom);
   };
 
   const handleZoomOut = () => {
-    const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
+    const currentZoomValue = currentZoomRef.current;
     const factor = 1 / 1.2;
-    const currentScale = scaleRef.current;
-    const newScale = currentScale * factor;
+    const newZoom = currentZoomValue * factor;
     
     // Límite mínimo: 100% (1x)
-    if (newScale < 1) return;
+    if (newZoom < 1) return;
     
-    const newW = current.w / factor;
-    const newH = current.h / factor;
-    const newX = current.x + (current.w - newW) / 2;
-    const newY = current.y + (current.h - newH) / 2;
-    setSvgViewBox({ x: newX, y: newY, w: newW, h: newH });
-    setScale(newScale);
+    applyZoom(newZoom);
   };
 
   const handleResetZoom = () => {
     const base = baseViewBoxRef.current;
     if (base.w > 0 && base.h > 0) {
       setSvgViewBox(base);
-      setScale(1);
+      setCurrentZoom(1);
+      currentZoomRef.current = 1;
     }
   };
 
@@ -168,15 +228,21 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       const zoomFactor = Math.exp(-data.deltaY * zoomIntensity);
       const minScale = 1; // 100% mínimo
       const maxScale = 5; // 500% máximo
-      const nextScale = Math.max(minScale, Math.min(maxScale, scaleRef.current * zoomFactor));
+      const currentZoomValue = currentZoomRef.current;
+      const nextScale = Math.max(minScale, Math.min(maxScale, currentZoomValue * zoomFactor));
+      
+      if (nextScale === currentZoomValue) return;
+      
       const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
-      const zoomRatio = scaleRef.current / nextScale;
+      const zoomRatio = currentZoomValue / nextScale;
       const newW = current.w * zoomRatio;
       const newH = current.h * zoomRatio;
       const newX = svgPt.x - (svgPt.x - current.x) * (newW / current.w);
       const newY = svgPt.y - (svgPt.y - current.y) * (newH / current.h);
+      
       setSvgViewBox({ x: newX, y: newY, w: newW, h: newH });
-      setScale(nextScale);
+      setCurrentZoom(nextScale);
+      currentZoomRef.current = nextScale;
     });
   }, [getSvgEl, setSvgViewBox]);
 
@@ -314,9 +380,13 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
         
         // Eventos de hover (overlay por encima, respetando selección y solo una vez)
         if (!el.hasAttribute('data-hover-attached')) {
-          el.addEventListener('mouseenter', () => {
+          el.addEventListener('mouseenter', (e) => {
             if (isPanningRef.current) return;
             if (el.getAttribute('data-selected') !== 'true') {
+              // Actualizar estado del panel de hover
+              setHoveredLote(lote);
+              const mouseEvent = e as MouseEvent;
+              setHoverPosition({ x: mouseEvent.clientX, y: mouseEvent.clientY });
               const svgRoot = svgDoc.querySelector('svg');
               if (!svgRoot) return;
               let hoverOverlay = svgDoc.getElementById('hover-overlay') as SVGGElement | null;
@@ -370,6 +440,9 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
           el.addEventListener('mouseleave', () => {
             if (isPanningRef.current) return;
             if (el.getAttribute('data-selected') !== 'true') {
+              // Limpiar estado del panel de hover
+              setHoveredLote(null);
+              setHoverPosition(null);
               const hoverOverlay = svgDoc.getElementById('hover-overlay');
               if (hoverOverlay) {
                 while (hoverOverlay.firstChild) hoverOverlay.removeChild(hoverOverlay.firstChild);
@@ -553,7 +626,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       const svgEl = getSvgEl();
       if (!svgEl) return;
       const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
-      const s = scaleRef.current;
+      const s = currentZoomRef.current;
       const velocityScale = Math.max(1, s);
       const newX = current.x - dx * (current.w / Math.max(1, containerSize.width)) * velocityScale;
       const newY = current.y - dy * (current.h / Math.max(1, containerSize.height)) * velocityScale;
@@ -595,7 +668,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       containerTapStartRef.current = { x: t.clientX, y: t.clientY, t: Date.now() };
       setIsPanning(true);
     }
-  }, [scale]);
+  }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     if (!objectRef.current) return;
@@ -623,18 +696,19 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       const factor = distance / (lastDistance || distance);
       const minScale = 1; // 100% mínimo
       const maxScale = 5; // 500% máximo
-      const nextScaleUnclamped = scaleRef.current * factor;
+      const nextScaleUnclamped = currentZoomRef.current * factor;
       const nextScale = Math.max(minScale, Math.min(maxScale, nextScaleUnclamped));
-      const k = nextScale / scaleRef.current;
+      const k = nextScale / currentZoomRef.current;
       if (k !== 1) {
         const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
-        const newW = current.w * (scaleRef.current / nextScale);
-        const newH = current.h * (scaleRef.current / nextScale);
+        const newW = current.w * (currentZoomRef.current / nextScale);
+        const newH = current.h * (currentZoomRef.current / nextScale);
         const newX = svgPt.x - (svgPt.x - current.x) * (newW / current.w);
         const newY = svgPt.y - (svgPt.y - current.y) * (newH / current.h);
         setSvgViewBox({ x: newX, y: newY, w: newW, h: newH });
         // Mantener indicador de zoom sincronizado
-        setScale(nextScale);
+        setCurrentZoom(nextScale);
+        currentZoomRef.current = nextScale;
       }
       pinchLastDistanceRef.current = distance;
       setIsPanning(false);
@@ -653,7 +727,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       const dx = t.clientX - lastPointerRef.current.x;
       const dy = t.clientY - lastPointerRef.current.y;
       const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
-      const s = scaleRef.current;
+      const s = currentZoomRef.current;
       // Reducir sensibilidad y atenuar influencia del zoom en pan táctil
       const sensitivity = 0.6; // 60% de la velocidad anterior
       const scaleInfluence = 1 + (Math.max(1, s) - 1) * 0.4; // antes 100%, ahora 40%
@@ -693,7 +767,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     }
     setIsPanning(false);
     lastPointerRef.current = null;
-    setScale(scaleRef.current);
+    // No necesitamos actualizar nada aquí, currentZoom ya está sincronizado
   }, [zoomAtClientPoint]);
 
   // Medir contenedor visible (viewport del mapa)
@@ -774,7 +848,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       panFrameRef.current = requestAnimationFrame(() => {
         panFrameRef.current = null;
         const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
-        const s = scaleRef.current;
+        const s = currentZoomRef.current;
         const newX = current.x - dx * (current.w / Math.max(1, containerSize.width)) * Math.max(1, s);
         const newY = current.y - dy * (current.h / Math.max(1, containerSize.height)) * Math.max(1, s);
         setSvgViewBox({ x: newX, y: newY, w: current.w, h: current.h });
@@ -867,12 +941,12 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       ">
         <button
           onClick={handleZoomIn}
-          disabled={scale >= 5}
+          disabled={currentZoom >= 5}
           className={`
             w-7 h-7 
             sm:w-9 sm:h-9 
             md:w-12 md:h-12 
-            ${scale >= 5 
+            ${currentZoom >= 5 
               ? 'bg-gradient-to-br from-gray-300 to-gray-400 cursor-not-allowed' 
               : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
             }
@@ -883,24 +957,24 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
             flex items-center justify-center 
             shadow-sm 
             sm:shadow-md 
-            ${scale < 5 ? 'hover:shadow-lg transform hover:scale-105 active:scale-95' : ''}
+            ${currentZoom < 5 ? 'hover:shadow-lg transform hover:scale-105 active:scale-95' : ''}
             font-bold 
             text-sm 
             sm:text-base 
             md:text-lg
           `}
-          title={scale >= 5 ? "Zoom máximo alcanzado (500%)" : "Acercar"}
+          title={currentZoom >= 5 ? "Zoom máximo alcanzado (500%)" : "Acercar"}
         >
           +
         </button>
         <button
           onClick={handleZoomOut}
-          disabled={scale <= 1}
+          disabled={currentZoom <= 1}
           className={`
             w-7 h-7 
             sm:w-9 sm:h-9 
             md:w-12 md:h-12 
-            ${scale <= 1 
+            ${currentZoom <= 1 
               ? 'bg-gradient-to-br from-gray-300 to-gray-400 cursor-not-allowed' 
               : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
             }
@@ -911,13 +985,13 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
             flex items-center justify-center 
             shadow-sm 
             sm:shadow-md 
-            ${scale > 1 ? 'hover:shadow-lg transform hover:scale-105 active:scale-95' : ''}
+            ${currentZoom > 1 ? 'hover:shadow-lg transform hover:scale-105 active:scale-95' : ''}
             font-bold 
             text-sm 
             sm:text-base 
             md:text-lg
           `}
-          title={scale <= 1 ? "Zoom mínimo alcanzado (100%)" : "Alejar"}
+          title={currentZoom <= 1 ? "Zoom mínimo alcanzado (100%)" : "Alejar"}
         >
           −
         </button>
@@ -978,7 +1052,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
         <div className="flex items-center gap-1 sm:gap-2">
           <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 md:w-2 md:h-2 bg-blue-500 rounded-full animate-pulse"></div>
           <span className="text-gray-700 font-semibold">
-            {Math.round(scale * 100)}%
+            {Math.round(currentZoom * 100)}%
           </span>
         </div>
       </div>
@@ -996,7 +1070,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchEnd}
-        style={{ cursor: isPanning ? 'grabbing' : scale > 1 ? 'grab' : 'default', touchAction: 'none' }}
+        style={{ cursor: isPanning ? 'grabbing' : currentZoom > 1 ? 'grab' : 'default', touchAction: 'none' }}
       >
         
         <div className="relative w-full h-full" style={{ touchAction: 'none' }}>
@@ -1011,6 +1085,13 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
           <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-100/20 pointer-events-none rounded-xl"></div>
         </div>
       </div>
+
+      {/* Panel de información del lote */}
+      <LoteInfoPanel 
+        lote={hoveredLote}
+        position={hoverPosition}
+        isVisible={!!hoveredLote && !!hoverPosition}
+      />
     </div>
   );
 }
