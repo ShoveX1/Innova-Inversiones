@@ -255,23 +255,23 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
   // Memoizar el mapeo de colores para evitar recálculos
   const colorMap = useMemo(() => ({
     "1": "#f5cdadff", // beige - Disponible
-    "2": "#fff200ff", // Amarillo - Reservado
+    "2": "#fff200ff", // Amarillo - Separado
     "3": "#ef1688ff", // morado - Vendido
     "4": "#ef1688ff", // morado - Bloqueado
     "5": "#ef1688ff", // morado - Bloqueo Comercial
-    "6": "#fff200ff", // Amarillo - Reserva comercial
+    "6": "#fff200ff", // Amarillo - Separado comercial
     ...(colorOverrides || {})
   }), [colorOverrides]);
 
   // Contadores de lotes por estado
   const contadores = useMemo(() => {
     const contador1 = lotes.filter(lote => lote.estado === "1").length; // Disponible
-    const contador2 = lotes.filter(lote => ["2", "6"].includes(lote.estado)).length; // Reservado + Reserva comercial
+    const contador2 = lotes.filter(lote => ["2", "6"].includes(lote.estado)).length; // Separado + Separado comercial
     const contador3 = lotes.filter(lote => ["3", "4", "5"].includes(lote.estado)).length; // Vendido + Bloqueado + Bloqueo Comercial
     
     return {
       disponible: contador1,
-      reservado: contador2,
+      separado: contador2,
       vendido: contador3
     };
   }, [lotes]);
@@ -518,14 +518,14 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     // Actualizar contadores en el SVG
     try {
       const contadorDisponibles = svgDoc.getElementById('contador-disponibles');
-      const contadorReservados = svgDoc.getElementById('contador-separados');
+      const contadorSeparados = svgDoc.getElementById('contador-separados');
       const contadorVendidos = svgDoc.getElementById('contador-vendidos');
       
       if (contadorDisponibles) {
         contadorDisponibles.textContent = contadores.disponible.toString().padStart(3, '0');
       }
-      if (contadorReservados) {
-        contadorReservados.textContent = contadores.reservado.toString().padStart(3, '0');
+      if (contadorSeparados) {
+        contadorSeparados.textContent = contadores.separado.toString().padStart(3, '0');
       }
       if (contadorVendidos) {
         contadorVendidos.textContent = contadores.vendido.toString().padStart(3, '0');

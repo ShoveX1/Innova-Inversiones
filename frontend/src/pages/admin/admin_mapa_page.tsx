@@ -125,7 +125,7 @@ export default function AdminMapaPage(){
                 <div className="flex-1 flex flex-col sm:flex-row min-h-0 overflow-hidden">
                     {/* Mapa - En móvil va abajo, en sm+ a la derecha */}
                     <div className="
-                        sm:h-full
+                        sm:h-full sm:max-h-[85vh]
                         w-full h-1/2 min-h-0 overflow-hidden rounded-lg border border-gray-200
                         m-4">
                         <MapaLotes  
@@ -134,7 +134,7 @@ export default function AdminMapaPage(){
                             error={error}
                             onSelectCodigo={setSelectedCodigo}
                             selectedCodigo={selectedCodigo}
-                            colorOverrides={{ "4": "#9ca3af", "5": "#e0e0e0", "6": "#d97706"}}
+                            colorOverrides={{ "4": "#9ca3af", "5": "#e0e0e0", "6": "#FF8C00"}}
                         />
                         {/* Info Panel superpuesto */}
                         {showInfoPanel && (

@@ -15,11 +15,11 @@ interface LoteInfoPanelProps {
 
 const colorMap: Record<string, string> = {
   "1": "#f5cdadff", // beige - Disponible
-  "2": "#fff200ff", // Amarillo - Reservado
+  "2": "#fff200ff", // Amarillo - Separado
   "3": "#ef1688ff", // morado - Vendido
   "4": "#ef1688ff", // morado - Bloqueado
   "5": "#ef1688ff", // morado - Bloqueo Comercial
-  "6": "#fff200ff", // Amarillo - Reserva comercial
+  "6": "#fff200ff", // Amarillo - Separado comercial
 };
 
 const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible }) => {
@@ -82,11 +82,11 @@ const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible
             ></div>
             <span className="font-semibold text-gray-900">
               {lote.estado === "1" ? "Disponible" :
-               lote.estado === "2" ? "Reservado" :
+               lote.estado === "2" ? "Separado" :
                lote.estado === "3" ? "Vendido" :
                lote.estado === "4" ? "Bloqueado" :
-               lote.estado === "5" ? "Bloqueo Comercial" :
-               lote.estado === "6" ? "Reserva Comercial" :
+               lote.estado === "5" ? "Bloqueado comercial" :
+               lote.estado === "6" ? "Separado comercial" :
                lote.estado}
             </span>
           </div>
