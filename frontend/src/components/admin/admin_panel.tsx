@@ -257,10 +257,11 @@ export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
 
     function estadoLabel(value: number){
         return value === 1 ? 'Disponible'
-            : value === 2 ? 'Reservado'
+            : value === 2 ? 'Separado'
             : value === 3 ? 'Vendido'
             : value === 4 ? 'Bloqueado'
             : value === 5 ? 'Bloque Comercial'
+            : value === 6 ? 'Reserva comercial'
             : '';
     }
 
@@ -281,11 +282,11 @@ export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
                     disabled={saving}
                 >
                     <option value="1">🟢 Disponible</option>
-                    <option value="2">🟡 Reservado</option>
+                    <option value="2">🟡 Separado</option>
+                    <option value="6">🟠 Separado comercial</option>
                     <option value="3">🔴 Vendido</option>
                     <option value="4">⚪ Bloqueado</option>
-                    <option value="5">⚪ Bloque Comercial</option>
-                    <option value="6">🟤 Reserva comercial</option>
+                    <option value="5">⚪ Bloqueado comercial</option>
                 </select>
             );
         }
@@ -296,7 +297,7 @@ export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
             : currentEstado === 3 ? '🔴'
             : currentEstado === 4 ? '⚪'
             : currentEstado === 5 ? '⚪'
-            : currentEstado === 6 ? '🟤'
+            : currentEstado === 6 ? '🟠'
             : '🔴';
         return (
             <div 
@@ -342,8 +343,8 @@ export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
 
 
     return(
-        <div className="h-full w-full flex flex-col">
-            <div className="bg-white shadow-md overflow-hidden flex flex-col h-full">
+        <div className="h-full w-full flex flex-col min-w-0">
+            <div className="bg-white shadow-md overflow-hidden flex flex-col h-full w-full">
                 {/* Header */}
                 <div className="px-3 sm:px-4 py-3 bg-gradient-to-r from-blue-900 to-blue-700 text-white flex items-center justify-between">
                     <h2 className="text-sm sm:text-lg font-semibold">Administrador de Lotes</h2>

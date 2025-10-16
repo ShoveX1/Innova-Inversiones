@@ -22,11 +22,11 @@ const currency = new Intl.NumberFormat("es-PE", { style: "currency", currency: "
 function estadoBadge(estado: string, estadoNombre: string) {
   const map: Record<string, { bg: string; text: string; label: string; emoji: string }> = {
     "1": { bg: "bg-green-100", text: "text-green-700", label: "Disponible", emoji: "🟢" },
-    "2": { bg: "bg-yellow-100", text: "text-yellow-800", label: "Reservado", emoji: "🟡" },
+    "2": { bg: "bg-yellow-100", text: "text-yellow-800", label: "Separado", emoji: "🟡" },
     "3": { bg: "bg-red-100", text: "text-red-700", label: "Vendido", emoji: "🔴" },
     "4": { bg: "bg-red-100", text: "text-red-700", label: "Vendido", emoji: "🔴" },
     "5": { bg: "bg-red-100", text: "text-red-700", label: "Vendido", emoji: "🔴" },
-    "6": { bg: "bg-yellow-100", text: "text-yellow-800", label: "Reservado", emoji: "🟤" },
+    "6": { bg: "bg-yellow-100", text: "text-yellow-800", label: "Separado", emoji: "🟡" },
   };
   const cls = map[estado] ?? { bg: "bg-gray-100", text: "text-gray-700", label: estadoNombre || "—", emoji: "⚪" };
   return (
