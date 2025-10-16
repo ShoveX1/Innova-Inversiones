@@ -84,9 +84,9 @@ const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible
               {lote.estado === "1" ? "Disponible" :
                lote.estado === "2" ? "Separado" :
                lote.estado === "3" ? "Vendido" :
-               lote.estado === "4" ? "Bloqueado" :
-               lote.estado === "5" ? "Bloqueado comercial" :
-               lote.estado === "6" ? "Separado comercial" :
+               lote.estado === "4" ? "Vendido" :
+               lote.estado === "5" ? "Vendido" :
+               lote.estado === "6" ? "Separado" :
                lote.estado}
             </span>
           </div>
