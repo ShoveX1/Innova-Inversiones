@@ -16,9 +16,10 @@ type Props = {
   onSelectCodigo: (codigo: string) => void;
   selectedCodigo?: string | null;
   colorOverrides?: Partial<Record<string, string>>;
+  disableAutoZoom?: boolean;
 };
 
-export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selectedCodigo = null, colorOverrides }: Props) {
+export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selectedCodigo = null, colorOverrides, disableAutoZoom = false }: Props) {
   const objectRef = useRef<HTMLObjectElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [svgLoaded, setSvgLoaded] = useState(false);
@@ -30,6 +31,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
   const lastWheelEventRef = useRef<{ deltaY: number; clientX: number; clientY: number } | null>(null);
   const [isPanning, setIsPanning] = useState(false);
   const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
+  const panStartRef = useRef<{ clientX: number; clientY: number; svgX: number; svgY: number } | null>(null);
   const pinchLastDistanceRef = useRef<number | null>(null);
   const tapStartRef = useRef<{ x: number; y: number; t: number; target: Element | null } | null>(null);
   const lastTapRef = useRef<{ x: number; y: number; time: number; fingers: number } | null>(null);
@@ -129,38 +131,90 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
   useEffect(() => {
     setSelectedLote(selectedCodigo);
   }, [selectedCodigo]);
+  // Función para animar el zoom suavemente
+  const animateZoomToLote = useCallback((centerX: number, centerY: number, targetZoom: number) => {
+    const startZoom = currentZoomRef.current;
+    const startTime = performance.now();
+    const duration = 800; // 800ms de animación
+    
+    const startViewBox = { ...viewBoxRef.current };
+    const base = baseViewBoxRef.current;
+    
+    // Calcular el viewBox objetivo
+    const targetWidth = base.w / targetZoom;
+    const targetHeight = base.h / targetZoom;
+    const targetX = centerX - targetWidth / 2;
+    const targetY = centerY - targetHeight / 2;
+    
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Usar easing suave (ease-out)
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      
+      // Interpolar entre el estado inicial y el objetivo
+      const currentZoom = startZoom + (targetZoom - startZoom) * easeOut;
+      const currentWidth = base.w / currentZoom;
+      const currentHeight = base.h / currentZoom;
+      const currentX = startViewBox.x + (targetX - startViewBox.x) * easeOut;
+      const currentY = startViewBox.y + (targetY - startViewBox.y) * easeOut;
+      
+      // Aplicar el viewBox actual
+      setSvgViewBox({
+        x: currentX,
+        y: currentY,
+        w: currentWidth,
+        h: currentHeight
+      });
+      
+      // Actualizar el zoom actual
+      setCurrentZoom(currentZoom);
+      currentZoomRef.current = currentZoom;
+      
+      // Continuar la animación si no ha terminado
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  }, [setSvgViewBox]);
+
   const selectCodigo = useCallback((codigo: string) => {
     setSelectedLote(codigo);
     onSelectCodigo(codigo);
     
-    // Zoom automático al lote seleccionado
-    const svgDoc = objectRef.current?.contentDocument;
-    if (svgDoc) {
-      const loteElement = svgDoc.getElementById(codigo);
-      if (loteElement) {
-        try {
-          // Obtener el bounding box del lote
-          const svgElement = loteElement as unknown as SVGGraphicsElement;
-          const bbox = svgElement.getBBox();
-          
-          // Calcular el centro del lote
-          const centerX = bbox.x + bbox.width / 2;
-          const centerY = bbox.y + bbox.height / 2;
-          
-          // Zoom objetivo: 300%
-          const targetZoom = 3;
-          const currentZoomValue = currentZoomRef.current;
-          
-          // Solo hacer zoom si el zoom actual es menor al objetivo
-          if (currentZoomValue < targetZoom) {
-            applyZoom(targetZoom, centerX, centerY);
+    // Zoom automático al lote seleccionado (solo si no está deshabilitado)
+    if (!disableAutoZoom) {
+      const svgDoc = objectRef.current?.contentDocument;
+      if (svgDoc) {
+        const loteElement = svgDoc.getElementById(codigo);
+        if (loteElement) {
+          try {
+            // Obtener el bounding box del lote
+            const svgElement = loteElement as unknown as SVGGraphicsElement;
+            const bbox = svgElement.getBBox();
+            
+            // Calcular el centro del lote
+            const centerX = bbox.x + bbox.width / 2;
+            const centerY = bbox.y + bbox.height / 2;
+            
+            // Zoom objetivo: 300%
+            const targetZoom = 3;
+            const currentZoomValue = currentZoomRef.current;
+            
+            // Solo hacer zoom si el zoom actual es menor al objetivo
+            if (currentZoomValue < targetZoom) {
+              animateZoomToLote(centerX, centerY, targetZoom);
+            }
+          } catch (error) {
+            console.warn('Error al hacer zoom al lote:', error);
           }
-        } catch (error) {
-          console.warn('Error al hacer zoom al lote:', error);
         }
       }
     }
-  }, [onSelectCodigo, applyZoom]);
+  }, [onSelectCodigo, disableAutoZoom, animateZoomToLote]);
 
   const handleClick = (e: React.MouseEvent<SVGPathElement>) => {
     const codigo = (e.currentTarget as SVGPathElement).dataset.codigo;
@@ -599,40 +653,66 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     return { x: clampedX, y: clampedY };
   }, [containerSize, svgNaturalSize]);
 
-  // Pan por arrastre (solo cuando hay zoom)
+  // Pan por arrastre mejorado - mantiene el punto de clic bajo el cursor
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsPanning(true);
-    lastPointerRef.current = { x: e.clientX, y: e.clientY };
+    
+    const svgEl = getSvgEl();
+    if (!svgEl) return;
+    
+    // Convertir el punto de clic a coordenadas del SVG
+    const pt = svgEl.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const svgPt = pt.matrixTransform(svgEl.getScreenCTM()?.inverse() || (new DOMMatrix()));
+    
+    // Guardar el punto inicial tanto en coordenadas de pantalla como del SVG
+    panStartRef.current = {
+      clientX: e.clientX,
+      clientY: e.clientY,
+      svgX: svgPt.x,
+      svgY: svgPt.y
+    };
+    
     // Asegurar estilo de cursor inmediatamente
     const el = containerRef.current;
     if (el) el.style.cursor = 'grabbing';
-  }, []);
+  }, [getSvgEl]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isPanning || !lastPointerRef.current) return;
+    if (!isPanning || !panStartRef.current) return;
     e.preventDefault();
-    const dx = e.clientX - lastPointerRef.current.x;
-    const dy = e.clientY - lastPointerRef.current.y;
-    lastPointerRef.current = { x: e.clientX, y: e.clientY };
 
     if (panFrameRef.current != null) return;
     panFrameRef.current = requestAnimationFrame(() => {
       panFrameRef.current = null;
+      
       const svgEl = getSvgEl();
       if (!svgEl) return;
+      
+      // Convertir la posición actual del mouse a coordenadas del SVG
+      const pt = svgEl.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const currentSvgPt = pt.matrixTransform(svgEl.getScreenCTM()?.inverse() || (new DOMMatrix()));
+      
+      // Calcular el desplazamiento necesario para mantener el punto original bajo el cursor
+      const deltaX = currentSvgPt.x - (panStartRef.current?.svgX || 0);
+      const deltaY = currentSvgPt.y - (panStartRef.current?.svgY || 0);
+      
+      // Aplicar el desplazamiento al viewBox actual
       const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
-      const s = currentZoomRef.current;
-      const velocityScale = Math.max(1, s);
-      const newX = current.x - dx * (current.w / Math.max(1, containerSize.width)) * velocityScale;
-      const newY = current.y - dy * (current.h / Math.max(1, containerSize.height)) * velocityScale;
+      const newX = current.x - deltaX;
+      const newY = current.y - deltaY;
+      
       setSvgViewBox({ x: newX, y: newY, w: current.w, h: current.h });
     });
-  }, [isPanning, getSvgEl, setSvgViewBox, containerSize]);
+  }, [isPanning, getSvgEl, setSvgViewBox]);
 
   const endPan = useCallback(() => {
     setIsPanning(false);
-    lastPointerRef.current = null;
+    panStartRef.current = null;
     const el = containerRef.current;
     if (el) el.style.cursor = '';
   }, []);
@@ -829,30 +909,55 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     const onMouseDown = (ev: MouseEvent) => {
       ev.preventDefault();
       setIsPanning(true);
-      lastPointerRef.current = { x: ev.clientX, y: ev.clientY };
+      
+      // Convertir el punto de clic a coordenadas del SVG
+      const pt = svgEl.createSVGPoint();
+      pt.x = ev.clientX;
+      pt.y = ev.clientY;
+      const svgPt = pt.matrixTransform(svgEl.getScreenCTM()?.inverse() || (new DOMMatrix()));
+      
+      // Guardar el punto inicial tanto en coordenadas de pantalla como del SVG
+      panStartRef.current = {
+        clientX: ev.clientX,
+        clientY: ev.clientY,
+        svgX: svgPt.x,
+        svgY: svgPt.y
+      };
+      
       const el = containerRef.current;
       if (el) el.style.cursor = 'grabbing';
     };
+    
     const onMouseMove = (ev: MouseEvent) => {
-      if (!isPanning || !lastPointerRef.current) return;
+      if (!isPanning || !panStartRef.current) return;
       ev.preventDefault();
-      const dx = ev.clientX - lastPointerRef.current.x;
-      const dy = ev.clientY - lastPointerRef.current.y;
-      lastPointerRef.current = { x: ev.clientX, y: ev.clientY };
 
       if (panFrameRef.current != null) return;
       panFrameRef.current = requestAnimationFrame(() => {
         panFrameRef.current = null;
+        
+        // Convertir la posición actual del mouse a coordenadas del SVG
+        const pt = svgEl.createSVGPoint();
+        pt.x = ev.clientX;
+        pt.y = ev.clientY;
+        const currentSvgPt = pt.matrixTransform(svgEl.getScreenCTM()?.inverse() || (new DOMMatrix()));
+        
+        // Calcular el desplazamiento necesario para mantener el punto original bajo el cursor
+        const deltaX = currentSvgPt.x - (panStartRef.current?.svgX || 0);
+        const deltaY = currentSvgPt.y - (panStartRef.current?.svgY || 0);
+        
+        // Aplicar el desplazamiento al viewBox actual
         const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
-        const s = currentZoomRef.current;
-        const newX = current.x - dx * (current.w / Math.max(1, containerSize.width)) * Math.max(1, s);
-        const newY = current.y - dy * (current.h / Math.max(1, containerSize.height)) * Math.max(1, s);
+        const newX = current.x - deltaX;
+        const newY = current.y - deltaY;
+        
         setSvgViewBox({ x: newX, y: newY, w: current.w, h: current.h });
       });
     };
+    
     const endPanSvg = () => {
       setIsPanning(false);
-      lastPointerRef.current = null;
+      panStartRef.current = null;
       const el = containerRef.current;
       if (el) el.style.cursor = '';
     };

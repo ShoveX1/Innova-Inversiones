@@ -127,6 +127,7 @@ export default function PlanoLotes({ navCollapsed }: PlanoLotesProps) {
                             onSelectCodigo={setSelectedCodigo}
                             selectedCodigo={selectedCodigo}
                             colorOverrides={{ "4": "#9ca3af", "5": "#e0e0e0", "6": "#FF8C00"}}
+                            disableAutoZoom={true}
                         />
                         {/* Info Panel superpuesto */}
                         {showInfoPanel && (

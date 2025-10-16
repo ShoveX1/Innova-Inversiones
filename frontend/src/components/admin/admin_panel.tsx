@@ -435,14 +435,14 @@ export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
                                     <button 
                                         disabled={saving} 
                                         onClick={() => saveRow(l.codigo)} 
-                                        className="flex-1 px-4 py-3 rounded-md bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 active:from-blue-800 active:to-blue-900 disabled:opacity-60 disabled:cursor-not-allowed transition text-sm font-medium touch-manipulation min-h-[44px] flex items-center justify-center"
+                                        className="flex-1 px-4 py-3 rounded-md bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-gray-50 hover:to-gray-100 hover:text-blue-700 active:from-blue-800 active:to-blue-900 disabled:opacity-60 disabled:cursor-not-allowed transition text-sm font-medium touch-manipulation min-h-[44px] flex items-center justify-center"
                                     >
                                         {saving ? '⏳ Guardando...' : '💾 Guardar Cambios'}
                                     </button>
                                     <button 
                                         disabled={saving} 
                                         onClick={() => discardRow(l.codigo)} 
-                                        className="flex-1 px-4 py-3 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 active:bg-gray-100 disabled:opacity-60 disabled:cursor-not-allowed transition text-sm font-medium touch-manipulation min-h-[44px] flex items-center justify-center"
+                                        className="flex-1 px-4 py-3 rounded-md border border-gray-300 text-white bg-red-500 hover:bg-gray-50 hover:text-red-500 active:bg-gray-100 disabled:opacity-60 disabled:cursor-not-allowed transition text-sm font-medium touch-manipulation min-h-[44px] flex items-center justify-center"
                                     >
                                         ❌ Descartar
                                     </button>
