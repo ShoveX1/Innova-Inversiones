@@ -278,7 +278,6 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
 
   // Función optimizada para aplicar colores al SVG
   const applyColors = useCallback((svgDoc: Document, lotesData: Lote[]) => {
-    // console.debug('Aplicando colores a', lotesData.length, 'lotes');
     
     // Crear un mapa para acceso O(1) en lugar de O(n)
     const lotesMap = new Map(lotesData.map(lote => [lote.codigo, lote]));
@@ -292,7 +291,6 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
         if (lote) {
           // Aplicar color según el estado del lote
           const color = colorMap[lote.estado as keyof typeof colorMap] || "#ffffff";
-          console.log(`🎨 Coloreando ${el.id} con ${color} (estado: ${lote.estado})`);
           el.setAttribute('fill', color);
           // Forzar el color también en el estilo CSS
           (el as SVGElement).style.fill = color;
@@ -534,7 +532,6 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       console.warn('Error al actualizar contadores en SVG:', e);
     }
 
-    // console.debug(`Colores aplicados: ${appliedCount} lotes encontrados`);
   }, [colorMap, selectedLote, contadores]);
 
   // Cargar datos del backend
@@ -554,7 +551,6 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
 
   // Manejar la carga del SVG
   const handleSvgLoad = useCallback(() => {
-    // console.log('📄 SVG cargado');
     setSvgLoaded(true);
   }, []);
 

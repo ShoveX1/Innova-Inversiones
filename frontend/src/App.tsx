@@ -19,12 +19,7 @@ function AppContent() {
       <main className="flex-1 flex min-h-0 min-w-0">
         <Routes>
           <Route path="/" element={<MapaPage />} />
-          <Route path="/admin" element={<AdminMapaPage />} />            {/* Rutas adicionales para navegación del panel */}
-          <Route path="/admin" element={<div className="p-6">Dashboard (en construcción)</div>} />
-          <Route path="/admin" element={<div className="p-6">Gestión de Clientes (en construcción)</div>} />
-          <Route path="/admin" element={<div className="p-6">Gestión de Usuarios (en construcción)</div>} />
-          <Route path="/admin" element={<div className="p-6">Transacciones (en construcción)</div>} />
-          <Route path="/admin" element={<div className="p-6">Créditos por Cobrar (en construcción)</div>} />
+          <Route path="/admin/*" element={<AdminMapaPage />} /> 
         </Routes>
       </main>
     </div>

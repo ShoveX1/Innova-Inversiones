@@ -72,7 +72,7 @@ export default function PanelNavegacion({onToggleSidebar}:PanelNavegacionProps) 
                 <div className={`flex flex-col gap-2 pt-8 pb-8 transition-all duration-300 ${isCollapsed ? 'px-2' : 'p-4'}`}>
                     {/* Plano de Lotes */}
                     <NavLink 
-                        to="/admin" 
+                        to="/admin/plano-lotes" 
                         className={({ isActive }) => 
                             `py-4 flex items-center text-white hover:text-white rounded-lg transition-all duration-200 ${isCollapsed ? 'justify-center' : 'ps-2 flex-row gap-4'} ` +
                             (isActive ? 'bg-white/20 shadow-lg scale-105' : 'hover:bg-white/10 hover:scale-105 hover:shadow-md')
@@ -91,7 +91,7 @@ export default function PanelNavegacion({onToggleSidebar}:PanelNavegacionProps) 
 
                     {/* Dashboard */}
                     <NavLink 
-                        to="/admin" 
+                        to="/admin/dashboard" 
                         className={({ isActive }) => 
                             `py-4 flex items-center text-white hover:text-white rounded-lg transition-all duration-200 ${isCollapsed ? 'justify-center' : 'ps-2 flex-row gap-2'} ` +
                             (isActive ? 'bg-white/20 shadow-lg scale-105' : 'hover:bg-white/10 hover:scale-105 hover:shadow-md')
@@ -110,7 +110,7 @@ export default function PanelNavegacion({onToggleSidebar}:PanelNavegacionProps) 
 
                     {/* Gestión de Clientes */}
                     <NavLink 
-                        to="/admin" 
+                        to="/admin/gestion-clientes" 
                         className={({ isActive }) => 
                             `py-4 flex items-center text-white hover:text-white rounded-lg transition-all duration-200 ${isCollapsed ? 'justify-center' : 'ps-2 flex-row gap-2'} ` +
                             (isActive ? 'bg-white/20 shadow-lg scale-105' : 'hover:bg-white/10 hover:scale-105 hover:shadow-md')
@@ -129,7 +129,7 @@ export default function PanelNavegacion({onToggleSidebar}:PanelNavegacionProps) 
 
                     {/* Gestión de Usuarios */}
                     <NavLink 
-                        to="/admin" 
+                        to="/admin/gestion-usuarios" 
                         className={({ isActive }) => 
                             `py-4 flex items-center text-white hover:text-white rounded-lg transition-all duration-200 ${isCollapsed ? 'justify-center' : 'ps-2 flex-row gap-2'} ` +
                             (isActive ? 'bg-white/20 shadow-lg scale-105' : 'hover:bg-white/10 hover:scale-105 hover:shadow-md')
@@ -148,7 +148,7 @@ export default function PanelNavegacion({onToggleSidebar}:PanelNavegacionProps) 
 
                     {/* Transacciones */}
                     <NavLink 
-                        to="/admin" 
+                        to="/admin/transacciones" 
                         className={({ isActive }) => 
                             `py-4 flex items-center text-white hover:text-white rounded-lg transition-all duration-200 ${isCollapsed ? 'justify-center' : 'ps-2 flex-row gap-2'} ` +
                             (isActive ? 'bg-white/20 shadow-lg scale-105' : 'hover:bg-white/10 hover:scale-105 hover:shadow-md')
@@ -167,7 +167,7 @@ export default function PanelNavegacion({onToggleSidebar}:PanelNavegacionProps) 
 
                     {/* Créditos por Cobrar */}
                     <NavLink 
-                        to="/admin" 
+                        to="/admin/creditos-por-cobrar" 
                         className={({ isActive }) => 
                             `py-4 flex items-center text-white hover:text-white rounded-lg transition-all duration-200 ${isCollapsed ? 'justify-center' : 'ps-2 flex-row gap-2'} ` +
                             (isActive ? 'bg-white/20 shadow-lg scale-105' : 'hover:bg-white/10 hover:scale-105 hover:shadow-md')
