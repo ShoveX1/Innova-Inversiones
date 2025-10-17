@@ -574,13 +574,13 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       const contadorVendidos = svgDoc.getElementById('contador-vendidos');
       
       if (contadorDisponibles) {
-        contadorDisponibles.textContent = contadores.disponible.toString().padStart(3, '0');
+        contadorDisponibles.textContent = contadores.disponible.toString();
       }
       if (contadorSeparados) {
-        contadorSeparados.textContent = contadores.separado.toString().padStart(3, '0');
+        contadorSeparados.textContent = contadores.separado.toString();
       }
       if (contadorVendidos) {
-        contadorVendidos.textContent = contadores.vendido.toString().padStart(3, '0');
+        contadorVendidos.textContent = contadores.vendido.toString();
       }
     } catch (e) {
       console.warn('Error al actualizar contadores en SVG:', e);
@@ -688,25 +688,37 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
     panFrameRef.current = requestAnimationFrame(() => {
       panFrameRef.current = null;
       
-      const svgEl = getSvgEl();
-      if (!svgEl) return;
+      if (!panStartRef.current) return;
       
-      // Convertir la posición actual del mouse a coordenadas del SVG
-      const pt = svgEl.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
-      const currentSvgPt = pt.matrixTransform(svgEl.getScreenCTM()?.inverse() || (new DOMMatrix()));
+      // Calcular el delta en píxeles de pantalla
+      const deltaX = e.clientX - panStartRef.current.clientX;
+      const deltaY = e.clientY - panStartRef.current.clientY;
       
-      // Calcular el desplazamiento necesario para mantener el punto original bajo el cursor
-      const deltaX = currentSvgPt.x - (panStartRef.current?.svgX || 0);
-      const deltaY = currentSvgPt.y - (panStartRef.current?.svgY || 0);
-      
-      // Aplicar el desplazamiento al viewBox actual
+      // Obtener el viewBox base del pan
       const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
-      const newX = current.x - deltaX;
-      const newY = current.y - deltaY;
+      
+      // Convertir el delta de píxeles a unidades del SVG
+      // El factor depende del tamaño del viewBox vs el tamaño del contenedor
+      const container = containerRef.current;
+      if (!container) return;
+      
+      const containerRect = container.getBoundingClientRect();
+      const scaleX = current.w / containerRect.width;
+      const scaleY = current.h / containerRect.height;
+      
+      // Aplicar el desplazamiento (invertido porque movemos el viewBox, no el contenido)
+      const newX = current.x - (deltaX * scaleX);
+      const newY = current.y - (deltaY * scaleY);
       
       setSvgViewBox({ x: newX, y: newY, w: current.w, h: current.h });
+      
+      // Actualizar la posición de referencia para el próximo frame
+      panStartRef.current = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        svgX: panStartRef.current.svgX,
+        svgY: panStartRef.current.svgY
+      };
     });
   }, [isPanning, getSvgEl, setSvgViewBox]);
 
@@ -936,22 +948,36 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       panFrameRef.current = requestAnimationFrame(() => {
         panFrameRef.current = null;
         
-        // Convertir la posición actual del mouse a coordenadas del SVG
-        const pt = svgEl.createSVGPoint();
-        pt.x = ev.clientX;
-        pt.y = ev.clientY;
-        const currentSvgPt = pt.matrixTransform(svgEl.getScreenCTM()?.inverse() || (new DOMMatrix()));
+        if (!panStartRef.current) return;
         
-        // Calcular el desplazamiento necesario para mantener el punto original bajo el cursor
-        const deltaX = currentSvgPt.x - (panStartRef.current?.svgX || 0);
-        const deltaY = currentSvgPt.y - (panStartRef.current?.svgY || 0);
+        // Calcular el delta en píxeles de pantalla
+        const deltaX = ev.clientX - panStartRef.current.clientX;
+        const deltaY = ev.clientY - panStartRef.current.clientY;
         
-        // Aplicar el desplazamiento al viewBox actual
+        // Obtener el viewBox base del pan
         const current = viewBoxRef.current.w > 0 ? viewBoxRef.current : baseViewBoxRef.current;
-        const newX = current.x - deltaX;
-        const newY = current.y - deltaY;
+        
+        // Convertir el delta de píxeles a unidades del SVG
+        const container = containerRef.current;
+        if (!container) return;
+        
+        const containerRect = container.getBoundingClientRect();
+        const scaleX = current.w / containerRect.width;
+        const scaleY = current.h / containerRect.height;
+        
+        // Aplicar el desplazamiento (invertido porque movemos el viewBox, no el contenido)
+        const newX = current.x - (deltaX * scaleX);
+        const newY = current.y - (deltaY * scaleY);
         
         setSvgViewBox({ x: newX, y: newY, w: current.w, h: current.h });
+        
+        // Actualizar la posición de referencia para el próximo frame
+        panStartRef.current = {
+          clientX: ev.clientX,
+          clientY: ev.clientY,
+          svgX: panStartRef.current.svgX,
+          svgY: panStartRef.current.svgY
+        };
       });
     };
     

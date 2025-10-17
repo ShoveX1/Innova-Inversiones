@@ -98,7 +98,7 @@ export default function PlanoLotes({ navCollapsed }: PlanoLotesProps) {
             {/* Panel de Navegación fijo */}
             <div className={`${navCollapsed ? 'ml-16' : 'ml-[19rem]'} h-screen overflow-auto`}>
                 <div className="bg-white shadow-md overflow-hidden flex flex-row justify-between">
-                    <div>
+                    <div className="max-h-[10vh]">
                         <h1 className="text-transparent bg-clip-text 
                             bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 
                             font-extrabold tracking-tight text-3xl px-4
@@ -117,7 +117,7 @@ export default function PlanoLotes({ navCollapsed }: PlanoLotesProps) {
                 <div className="flex-1 flex flex-col sm:flex-row min-h-0 overflow-hidden">
                     {/* Mapa - En móvil va abajo, en sm+ a la derecha */}
                     <div className="
-                        sm:h-full sm:max-h-[85vh] sm:min-h-[85vh]
+                        sm:h-full sm:max-h-[87vh] sm:min-h-[87vh]
                         w-full h-1/2 min-h-0 overflow-hidden rounded-lg border border-gray-200
                         m-4 mr-2">
                         <MapaLotes  
