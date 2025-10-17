@@ -5,7 +5,7 @@ interface GestionUsuariosProps {
 export default function GestionUsuarios({ navCollapsed }: GestionUsuariosProps) {
     return (
         <div className="h-screen w-full">
-            <div className={`${navCollapsed ? 'ml-16' : 'ml-[19rem]'} h-screen overflow-auto`}>
+            <div className={`${navCollapsed ? 'ml-16' : 'ml-[16rem]'} h-screen overflow-auto`}>
                 <div className="bg-white shadow-md overflow-hidden flex flex-row justify-between">
                     <div>
                         <h1 className="text-transparent bg-clip-text 

@@ -5,11 +5,11 @@ import { NavLink } from 'react-router-dom';
 
 
 
-interface PanelNavegacionProps{
+interface SidebarAdminProps{
     onToggleSidebar?: (isCollapsed: boolean) => void;
 }
 
-export default function PanelNavegacion({onToggleSidebar}:PanelNavegacionProps) {
+export default function SidebarAdmin({onToggleSidebar}:SidebarAdminProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     const toggleCollapse = () => {
@@ -35,8 +35,8 @@ export default function PanelNavegacion({onToggleSidebar}:PanelNavegacionProps) 
                             <div className="flex items-center space-x-3">
                                 <img src="/logo_innova_blanco.svg" alt="Innova Inversiones" className="w-8 h-8" />
                                 <div className="flex flex-col items-start">
-                                    <h2 className="text-2xl font-bold mr-2">Innova Inversiones</h2>
-                                    <span className="text-xs">Las Bugambilias</span>
+                                    <h2 className="text-2xl font-bold mr-2">Innova</h2>
+                                    <span className="text-sm">Inversiones</span>
                                 </div>
                             </div>
                         </div>
