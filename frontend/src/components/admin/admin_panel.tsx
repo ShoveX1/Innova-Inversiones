@@ -13,8 +13,8 @@ export interface Lote_admin{
     actualizado_en: string;
 };
 
-type AdminPanelProps = { codigo?: string | null; onClose?: () => void };
-export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
+type AdminPanelProps = { codigo?: string | null };
+export default function AdminPanel({ codigo }: AdminPanelProps){
     const [lotes, setLotes] = useState<Lote_admin[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -196,10 +196,10 @@ export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
                 onClick={() => startEdit(l, field)} 
                 className="cursor-text px-3 py-2 rounded-md hover:bg-blue-50/80 active:bg-blue-100/80 transition border border-transparent hover:border-blue-200 min-h-[40px] flex items-center touch-manipulation select-none"
             >
-                <span className="text-gray-800 flex-1">
+                <span className="text-xs sm:text-sm text-gray-800 flex-1">
                     {display == null || display === '' ? '-' : String(display)}
                 </span>
-                <span className="ml-2 text-gray-400 text-xs">✏️</span>
+                <span className="ml-2 text-gray-400 text-[10px] sm:text-xs">✏️</span>
             </div>
         );
     }
@@ -247,10 +247,10 @@ export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
                 onClick={() => startEdit(l, field)} 
                 className="cursor-text px-3 py-2 rounded-md hover:bg-blue-50/80 active:bg-blue-100/80 transition border border-transparent hover:border-blue-200 min-h-[40px] flex items-center touch-manipulation select-none"
             >
-                <span className="text-gray-800 flex-1">
+                <span className="text-xs sm:text-sm text-gray-800 flex-1">
                     {display == null || display === '' ? 'S/. 0' : `S/. ${String(display)}`}
                 </span>
-                <span className="ml-2 text-gray-400 text-xs">✏️</span>
+                <span className="ml-2 text-gray-400 text-[10px] sm:text-xs">✏️</span>
             </div>
         );
     }
@@ -304,10 +304,10 @@ export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
                 onClick={() => startEdit(l, 'estado')} 
                 className="cursor-pointer px-3 py-2 rounded-md hover:bg-blue-50/80 active:bg-blue-100/80 transition border border-transparent hover:border-blue-200 min-h-[40px] flex items-center touch-manipulation select-none"
             >
-                <span className="text-gray-800 flex-1">
+                <span className="text-xs sm:text-sm text-gray-800 flex-1">
                     {estadoEmoji} {estadoLabel(currentEstado)}
                 </span>
-                <span className="ml-2 text-gray-400 text-xs">✏️</span>
+                <span className="ml-2 text-gray-400 text-[10px] sm:text-xs">✏️</span>
             </div>
         );
     }
@@ -316,25 +316,25 @@ export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
     if (!codigo) return (
         <div className="h-full flex items-center justify-center p-4">
             <div className="bg-white/90 border border-gray-200 rounded-xl p-6 text-gray-600 shadow-sm text-center">
-                <div className="text-4xl mb-2">📍</div>
-                <p className="text-sm sm:text-base">Selecciona un lote en el mapa</p>
+                <div className="text-2xl sm:text-4xl mb-2">📍</div>
+                <p className="text-xs sm:text-base">Selecciona un lote en el mapa</p>
             </div>
         </div>
     );
     if (loading) return (
         <div className="h-full flex items-center justify-center p-4">
             <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl p-6 shadow-sm text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                <p className="text-sm sm:text-base">Cargando...</p>
+                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-xs sm:text-base">Cargando...</p>
             </div>
         </div>
     );
     if (error) return (
         <div className="h-full flex items-center justify-center p-4">
             <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-6 shadow-sm text-center max-w-sm">
-                <div className="text-4xl mb-2">⚠️</div>
-                <p className="text-sm mb-4">Error: {error}</p>
-                <button onClick={() => cargarLotes(codigo ?? null)} className="px-4 py-2 rounded-md bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition text-sm">
+                <div className="text-2xl sm:text-4xl mb-2">⚠️</div>
+                <p className="text-xs sm:text-sm mb-4">Error: {error}</p>
+                <button onClick={() => cargarLotes(codigo ?? null)} className="px-4 py-2 rounded-md bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition text-xs sm:text-sm">
                     Reintentar
                 </button>
             </div>
@@ -346,17 +346,35 @@ export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
         <div className="h-full w-full flex flex-col min-w-0">
             <div className="bg-white shadow-md overflow-hidden flex flex-col h-full w-full">
                 {/* Header */}
-                <div className="px-3 sm:px-4 py-3 bg-gradient-to-r from-blue-900 to-blue-700 text-white flex items-center justify-between">
-                    <h2 className="text-sm sm:text-lg font-semibold">Administrador de Lotes</h2>
-                    {onClose && (
-                        <button 
-                            onClick={onClose} 
-                            aria-label="Cerrar panel"
-                            className="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 active:bg-white/30 border border-white/20 transition text-xs sm:text-sm touch-manipulation min-h-[36px] flex items-center justify-center"
-                        >
-                            ✕
-                        </button>
+                <div className="px-3 content-center pt-2 h-[4rem] bg-gradient-to-r from-blue-900 to-blue-700 text-white">
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-sm sm:text-lg font-semibold">Administrador de Lotes</h2>
+
+                    {/* Botones de acción globales */}
+                    {codigo && hasDrafts(codigo) && (
+                        <div className="flex flex-row gap-2">
+                            <button 
+                                disabled={saving} 
+                                onClick={() => saveRow(codigo)} 
+                                className="flex-1 px-3 py-2 rounded-md bg-white/10 hover:bg-white hover:text-blue-500 hover:border-blue-500 active:bg-white/30 border border-white/20 disabled:opacity-60 disabled:cursor-not-allowed transition text-xs sm:text-sm font-medium touch-manipulation min-h-[36px] flex items-center justify-center"
+                            >
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+                                </svg>
+                                
+                            </button>
+                            <button 
+                                disabled={saving} 
+                                onClick={() => discardRow(codigo)} 
+                                className="flex-1 px-3 py-2 rounded-md bg-red-500/85 hover:bg-white hover:text-red-500 hover:border-red-500 active:bg-red-700 border border-white/20 disabled:opacity-60 disabled:cursor-not-allowed transition text-xs sm:text-sm font-medium touch-manipulation min-h-[36px] flex items-center justify-center"
+                            >
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </button>
+                        </div>
                     )}
+                    </div>   
                 </div>
                 
                 {/* Content */}
@@ -366,22 +384,22 @@ export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
                             {/* Código del lote */}
                             <div className="mb-4">
                                 <div className="flex items-center justify-between mb-2">
-                                    <h3 className="text-lg font-bold text-blue-900">Lote {l.codigo}</h3>
+                                    <h3 className="text-sm sm:text-lg font-bold text-blue-900">Lote {l.codigo}</h3>
                                     {hasDrafts(l.codigo) && (
-                                        <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full flex items-center">
+                                        <span className="px-2 py-1 bg-orange-100 text-orange-800 text-[10px] sm:text-xs font-medium rounded-full flex items-center">
                                             ⚠️ Cambios pendientes
                                         </span>
                                     )}
                                 </div>
-                                <div className="text-xs text-gray-500">
+                                <div className="text-[10px] sm:text-xs text-gray-500">
                                     Actualizado: {new Date(l.actualizado_en).toLocaleString()}
                                 </div>
                             </div>
 
                             {/* Estado - Ocupa todo el ancho */}
                             <div className="space-y-1 mb-4">
-                                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Estado</label>
-                                <div className="text-sm">
+                                <label className="text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wide">Estado</label>
+                                <div className="text-xs sm:text-sm">
                                     {renderEstadoCell(l)}
                                 </div>
                             </div>
@@ -390,64 +408,45 @@ export default function AdminPanel({ codigo, onClose }: AdminPanelProps){
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4">
                                 {/* Área */}
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Área (m²)</label>
-                                    <div className="text-sm">
+                                    <label className="text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wide">Área (m²)</label>
+                                    <div className="text-xs sm:text-sm">
                                         {renderEditableCell(l, 'area_lote', 'number')}
                                     </div>
                                 </div>
 
                                 {/* Perímetro */}
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Perímetro (m)</label>
-                                    <div className="text-sm">
+                                    <label className="text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wide">Perímetro (m)</label>
+                                    <div className="text-xs sm:text-sm">
                                         {renderEditableCell(l, 'perimetro', 'number')}
                                     </div>
                                 </div>
 
                                 {/* Precio */}
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Precio (S/.)</label>
-                                    <div className="text-sm">
+                                    <label className="text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wide">Precio (S/.)</label>
+                                    <div className="text-xs sm:text-sm">
                                         {renderEditableCellWithCurrency(l, 'precio', 'number')}
                                     </div>
                                 </div>
 
                                 {/* Precio por m² */}
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Precio m² (S/.)</label>
-                                    <div className="text-sm">
+                                    <label className="text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wide">Precio m² (S/.)</label>
+                                    <div className="text-xs sm:text-sm">
                                         {renderEditableCellWithCurrency(l, 'precio_metro_cuadrado', 'number')}
                                     </div>
                                 </div>
 
                                 {/* Descripción */}
                                 <div className="space-y-1 md:col-span-2">
-                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Descripción</label>
-                                    <div className="text-sm">
+                                    <label className="text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wide">Descripción</label>
+                                    <div className="text-xs sm:text-sm">
                                         {renderEditableCell(l, 'descripcion', 'text')}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Botones de acción */}
-                            {hasDrafts(l.codigo) && (
-                                <div className="flex flex-col md:flex-row gap-3 pt-4 border-t border-gray-200">
-                                    <button 
-                                        disabled={saving} 
-                                        onClick={() => saveRow(l.codigo)} 
-                                        className="flex-1 px-4 py-3 rounded-md bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-gray-50 hover:to-gray-100 hover:text-blue-700 active:from-blue-800 active:to-blue-900 disabled:opacity-60 disabled:cursor-not-allowed transition text-sm font-medium touch-manipulation min-h-[44px] flex items-center justify-center"
-                                    >
-                                        {saving ? '⏳ Guardando...' : '💾 Guardar Cambios'}
-                                    </button>
-                                    <button 
-                                        disabled={saving} 
-                                        onClick={() => discardRow(l.codigo)} 
-                                        className="flex-1 px-4 py-3 rounded-md border border-gray-300 text-white bg-red-500 hover:bg-gray-50 hover:text-red-500 active:bg-gray-100 disabled:opacity-60 disabled:cursor-not-allowed transition text-sm font-medium touch-manipulation min-h-[44px] flex items-center justify-center"
-                                    >
-                                        ❌ Descartar
-                                    </button>
-                                </div>
-                            )}
                         </div>
                     ))}
                 </div>

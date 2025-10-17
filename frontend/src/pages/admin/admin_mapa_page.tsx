@@ -1,4 +1,4 @@
-import PanelNavegacion from "../../components/admin/panel_navegacion";
+import SidebarAdmin from "../../components/admin/sidebar_admin";
 import PlanoLotes from "./admin_sub_pages/plano_lotes";
 import Dashboard from "./admin_sub_pages/dashboard";
 import GestionClientes from "./admin_sub_pages/gestion_clientes";
@@ -24,8 +24,8 @@ export default function AdminMapaPage(){
     return (
         <div className="h-screen w-full">
             {/* Panel de Navegación fijo */}
-            <div className={`fixed left-0 top-0 h-screen z-30 ${navCollapsed ? 'w-16' : 'w-[19rem]'}`}>
-                <PanelNavegacion onToggleSidebar={(isCollapsed:boolean) => setNavCollapsed(isCollapsed)} />
+            <div className={`fixed left-0 top-0 h-screen z-30 ${navCollapsed ? 'w-16' : 'w-[16rem]'}`}>
+                <SidebarAdmin onToggleSidebar={(isCollapsed:boolean) => setNavCollapsed(isCollapsed)} />
             </div>
             <div className="h-screen w-full">
                 <Routes>

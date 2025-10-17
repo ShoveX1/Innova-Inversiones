@@ -84,10 +84,15 @@ export default function PlanoLotes({ navCollapsed }: PlanoLotesProps) {
         return () => window.clearInterval(interval);
     }, [fetchLotes]);
 
-    // Al seleccionar un lote, volvemos a mostrar el InfoPanel
+    // Al seleccionar un lote, volvemos a mostrar el InfoPanel (solo si AdminPanel está cerrado)
     useEffect(() => {
-        if (selectedCodigo) setShowInfoPanel(true);
-    }, [selectedCodigo]);
+        if (selectedCodigo && !showAdminPanel) setShowInfoPanel(true);
+    }, [selectedCodigo, showAdminPanel]);
+
+    // Cuando se abre el AdminPanel, cerrar el InfoPanel
+    useEffect(() => {
+        if (showAdminPanel) setShowInfoPanel(false);
+    }, [showAdminPanel]);
 
     const selectedLote = useMemo(() => {
         return lotes.find(l => l.codigo === selectedCodigo) ?? null;
@@ -96,12 +101,12 @@ export default function PlanoLotes({ navCollapsed }: PlanoLotesProps) {
     return (
         <div className="h-screen w-full">
             {/* Panel de Navegación fijo */}
-            <div className={`${navCollapsed ? 'ml-16' : 'ml-[19rem]'} h-screen overflow-auto`}>
+            <div className={`${navCollapsed ? 'ml-16' : 'ml-[16rem]'} h-screen overflow-auto`}>
                 <div className="bg-white shadow-md overflow-hidden flex flex-row justify-between">
                     <div className="max-h-[10vh]">
                         <h1 className="text-transparent bg-clip-text 
                             bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 
-                            font-extrabold tracking-tight text-3xl px-4
+                            font-extrabold tracking-tight text-2xl px-4
                             sm:text-4xl md:text-5xl drop-shadow-sm mt-2">
                             Plano de Lotes
                         </h1>
@@ -109,17 +114,18 @@ export default function PlanoLotes({ navCollapsed }: PlanoLotesProps) {
                     </div>
                     <button 
                         onClick={() => setShowAdminPanel(prev => !prev)}
-                        className="bg-blue-600 text-white mx-4 my-auto rounded-lg w-36 h-12 flex items-center justify-center"
+                        className="bg-blue-600 text-white mx-4 my-auto rounded-lg w-8 h-8 sm:w-36 sm:h-12 flex items-center justify-center"
                     >
-                        <p>{showAdminPanel ? 'Cerrar Edición' : 'Editar Lotes'}</p>
+                        <span className="block sm:hidden">{showAdminPanel ? '✕' : '🖊️'}</span>
+                        <p className="hidden sm:block">{showAdminPanel ? 'Cerrar Edición' : 'Editar Lotes'}</p>
                     </button>
                 </div>
-                <div className="flex-1 flex flex-col sm:flex-row min-h-0 overflow-hidden">
+                <div className="flex-1 flex flex-col sm:flex-row min-h-0 overflow-hidden h-[calc(100vh-4.3rem)] sm:h-auto">
                     {/* Mapa - En móvil va abajo, en sm+ a la derecha */}
-                    <div className="
-                        sm:h-full sm:max-h-[87vh] sm:min-h-[87vh]
-                        w-full h-1/2 min-h-0 overflow-hidden rounded-lg border border-gray-200
-                        m-4 mr-2">
+                    <div className={`
+                        sm:h-full sm:max-h-[87vh] sm:min-h-[87vh] sm:w-full
+                        w-[80vw] ${showAdminPanel ? 'h-1/3' : 'h-1/2'} min-h-0 overflow-hidden rounded-lg border border-gray-200
+                        m-1 sm:m-4 mr-2 mb-1`}>
                         <MapaLotes  
                             lotes={lotes}
                             loading={loading}
@@ -142,10 +148,10 @@ export default function PlanoLotes({ navCollapsed }: PlanoLotesProps) {
                     {/* Panel de administración - Toggle */}
                     {showAdminPanel && (
                         <div className=" 
-                            sm:h-full sm:w-[500px]
-                            w-full h-1/2 m-4
-                            min-h-0 overflow-hidden flex flex-col rounded-lg">
-                            <AdminPanel codigo={selectedCodigo} onClose={() => setShowAdminPanel(false)} />
+                            sm:h-full sm:w-[500px] sm:max-h-[87vh]
+                            w-[80vw] h-2/3  m-1 sm:m-4 mt-0
+                            min-h-0 overflow-y-auto flex flex-col rounded-lg shadow-lg">
+                            <AdminPanel codigo={selectedCodigo} />
                         </div>
                     )}
                     
