@@ -41,7 +41,7 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
   // Estado de arrastre
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 16, y: 80 });
+  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 16, y: 16 });
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
   const onMouseDownRoot = (e: React.MouseEvent) => {
@@ -108,7 +108,7 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
             }
           : {
               left: position.x,
-              top: position.y,
+              top: `calc(10vh + ${position.y}px)`,
               width: 320,
             }
       }
