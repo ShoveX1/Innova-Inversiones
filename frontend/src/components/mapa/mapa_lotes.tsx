@@ -200,14 +200,12 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
             const centerX = bbox.x + bbox.width / 2;
             const centerY = bbox.y + bbox.height / 2;
             
-            // Zoom objetivo: 300%
-            const targetZoom = 3;
+            // Zoom objetivo: 300% si es menor, o mantener el actual si es mayor
             const currentZoomValue = currentZoomRef.current;
+            const targetZoom = currentZoomValue < 3 ? 3 : currentZoomValue;
             
-            // Solo hacer zoom si el zoom actual es menor al objetivo
-            if (currentZoomValue < targetZoom) {
-              animateZoomToLote(centerX, centerY, targetZoom);
-            }
+            // Siempre centrar el lote (con o sin cambio de zoom)
+            animateZoomToLote(centerX, centerY, targetZoom);
           } catch (error) {
             console.warn('Error al hacer zoom al lote:', error);
           }
@@ -1041,9 +1039,9 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       {/* Controles de zoom - FUERA del contenedor con onDoubleClick */}
       <div className="
         absolute 
-        bottom-2 right-2 
-        sm:bottom-3 sm:right-3 
-        md:top-6 md:right-6 md:bottom-auto 
+        top-2 right-2 
+        sm:top-3 sm:right-3 
+        md:top-6 md:right-6 
         bg-white/70 
         sm:bg-white/80 
         md:bg-white/95 
@@ -1086,7 +1084,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
             sm:shadow-md 
             ${currentZoom < 5 ? 'hover:shadow-lg transform hover:scale-105 active:scale-95' : ''}
             font-bold 
-            text-sm 
+            text-xs 
             sm:text-base 
             md:text-lg
           `}
@@ -1114,7 +1112,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
             sm:shadow-md 
             ${currentZoom > 1 ? 'hover:shadow-lg transform hover:scale-105 active:scale-95' : ''}
             font-bold 
-            text-sm 
+            text-xs 
             sm:text-base 
             md:text-lg
           `}
