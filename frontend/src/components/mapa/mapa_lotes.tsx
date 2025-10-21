@@ -565,7 +565,7 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       // console.warn('No se pudo actualizar overlay de selección:', e);
     }
 
-    // Actualizar contadores en el SVG
+    // Actualizar contadores en el SVG con estilo
     try {
       const contadorDisponibles = svgDoc.getElementById('contador-disponibles');
       const contadorSeparados = svgDoc.getElementById('contador-separados');
@@ -573,12 +573,30 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       
       if (contadorDisponibles) {
         contadorDisponibles.textContent = contadores.disponible.toString();
+        // Aplicar estilos de fuente modernos
+        contadorDisponibles.setAttribute('font-family', 'Arial, Helvetica, sans-serif');
+        contadorDisponibles.setAttribute('font-weight', 'bold');
+        contadorDisponibles.setAttribute('font-size', '14');
+        contadorDisponibles.style.fontFamily = 'Arial, Helvetica, sans-serif';
+        contadorDisponibles.style.fontWeight = 'bold';
       }
       if (contadorSeparados) {
         contadorSeparados.textContent = contadores.separado.toString();
+        // Aplicar estilos de fuente modernos
+        contadorSeparados.setAttribute('font-family', 'Arial, Helvetica, sans-serif');
+        contadorSeparados.setAttribute('font-weight', 'bold');
+        contadorSeparados.setAttribute('font-size', '14');
+        contadorSeparados.style.fontFamily = 'Arial, Helvetica, sans-serif';
+        contadorSeparados.style.fontWeight = 'bold';
       }
       if (contadorVendidos) {
         contadorVendidos.textContent = contadores.vendido.toString();
+        // Aplicar estilos de fuente modernos
+        contadorVendidos.setAttribute('font-family', 'Arial, Helvetica, sans-serif');
+        contadorVendidos.setAttribute('font-weight', 'bold');
+        contadorVendidos.setAttribute('font-size', '14');
+        contadorVendidos.style.fontFamily = 'Arial, Helvetica, sans-serif';
+        contadorVendidos.style.fontWeight = 'bold';
       }
     } catch (e) {
       console.warn('Error al actualizar contadores en SVG:', e);

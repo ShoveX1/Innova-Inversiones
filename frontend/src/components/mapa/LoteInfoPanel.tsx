@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface Lote {
   codigo: string;
@@ -13,6 +13,8 @@ interface LoteInfoPanelProps {
   isVisible: boolean;
 }
 
+const currency = new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" });
+
 const colorMap: Record<string, string> = {
   "1": "#f5cdadff", // beige - Disponible
   "2": "#fff200ff", // Amarillo - Separado
@@ -23,6 +25,29 @@ const colorMap: Record<string, string> = {
 };
 
 const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible }) => {
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  // Detectar si es un dispositivo táctil
+  useEffect(() => {
+    const checkTouchDevice = () => {
+      // Verificar múltiples indicadores de dispositivo táctil
+      const hasTouch = (
+        'ontouchstart' in window ||
+        navigator.maxTouchPoints > 0 ||
+        // @ts-ignore - msMaxTouchPoints es específico de IE
+        navigator.msMaxTouchPoints > 0
+      );
+      setIsTouchDevice(hasTouch);
+    };
+
+    checkTouchDevice();
+  }, []);
+
+  // No mostrar el panel en dispositivos táctiles
+  if (isTouchDevice) {
+    return null;
+  }
+
   if (!isVisible || !lote || !position) {
     return null;
   }
@@ -45,7 +70,7 @@ const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible
         transition-all duration-200 ease-out
       "
       style={{
-        left: Math.min(position.x + 10, window.innerWidth - 250),
+        left: Math.min(position.x + 35, window.innerWidth - 250),
         top: Math.min(position.y - 10, window.innerHeight - 150),
       }}
     >
@@ -67,7 +92,7 @@ const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible
         {lote.precio && (lote.estado === "1" || lote.estado === "2" || lote.estado === "6") && (
           <div className="flex justify-between items-center">
             <span className="font-medium">Precio:</span>
-            <span className="font-semibold text-green-600">S/ {lote.precio.toLocaleString()}</span>
+            <span className="font-semibold text-green-600"> {currency.format(Number(lote.precio))}</span>
           </div>
         )}
         
