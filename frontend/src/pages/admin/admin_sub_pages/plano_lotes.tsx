@@ -103,7 +103,7 @@ export default function PlanoLotes({ navCollapsed }: PlanoLotesProps) {
             {/* Panel de Navegación fijo */}
             <div className={`${navCollapsed ? 'ml-16' : 'ml-[16rem]'} h-screen overflow-auto`}>
                 <div className="bg-white shadow-md overflow-hidden flex flex-row justify-between">
-                    <div className="max-h-[10vh]">
+                    <div className="h-[70px] sm:h-[85px]">
                         <h1 className="text-transparent bg-clip-text 
                             bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 
                             font-extrabold tracking-tight text-2xl px-4
