@@ -22,12 +22,12 @@ export default function SidebarAdmin({onToggleSidebar}:SidebarAdminProps) {
         <div className={`bg-white shadow-md overflow-visible flex flex-col h-min-full h-full transition-all duration-300 ${isCollapsed ? 'max-w-16' : 'max-w-sm'}`}>
 
             {/* Header del Panel */}
-            <div className={`px-5 py-4 bg-gradient-to-r from-blue-900 to-blue-700 text-white transition-all duration-300 ${isCollapsed ? 'px-2' : ''}`}>
+            <div className={`px-5 py-4 h-[70px] sm:h-[85px] bg-gradient-to-r from-blue-900 to-blue-700 text-white transition-all duration-300 ${isCollapsed ? 'px-2' : ''}`}>
                 <div className="flex items-center justify-center">
                     {isCollapsed ? (
                         /* Estado colapsado - Solo logo */
-                        <div className="flex flex-col items-center gap 2">
-                            <img src="/logo_innova_blanco.svg" alt="Innova Inversiones" className="w-8 h-8" />
+                        <div className="flex flex-col items-center h-[70px] sm:h-[85px]">
+                            <img src="/logo_innova_blanco.svg" alt="Innova Inversiones" className="w-12 h-12" />
                         </div>
                     ) : (
                         /* Estado expandido - Logo + texto + botón */
