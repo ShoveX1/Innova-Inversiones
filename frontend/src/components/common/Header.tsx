@@ -1,7 +1,14 @@
+import { useState } from 'react';
 import PrintButton from '../mapa/plano_componentes/components/printButton';
 
 
 export default function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
     <header className="bg-gradient-to-r from-blue-900 to-blue-700 text-white shadow-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 max-w-6xl">
@@ -38,13 +45,40 @@ export default function Header() {
 
                 </div>
 
-                {/* Navegación */}
+                {/* Navegación Desktop */}
                 <nav className="hidden md:flex space-x-6">
                     <a href="#" className="p-2 hover:text-blue-200 transition-colors text-white hover:scale-110 active:scale-95">PROYECTO</a>
                     <a href="#" className="p-2 hover:text-blue-200 transition-colors text-white hover:scale-110 active:scale-95">¿CÓMO COMPRAR?</a>
                     <a href="#" className="p-2 hover:text-blue-200 transition-colors text-white hover:scale-110 active:scale-95">ASESORES</a>
                     <a href="#" className="px-4 py-1 hover:text-blue-200 transition-colors font-bold text-white text-lg hover:scale-110 active:scale-95">CONTÁCTANOS</a>
                     <PrintButton />
+                </nav>
+
+                {/* Controles Mobile (PrintButton + Hamburguesa) */}
+                <div className="md:hidden flex items-center gap-2">
+                    {/* PrintButton compacto para móvil */}
+                    <PrintButton />
+                    
+                    {/* Botón Hamburguesa */}
+                    <button 
+                        onClick={toggleMenu}
+                        className="flex flex-col justify-center items-center w-10 h-10 space-y-1.5 focus:outline-none hover:opacity-80 transition-opacity"
+                        aria-label="Menú"
+                    >
+                        <span className={`block w-6 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+                        <span className={`block w-6 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
+                        <span className={`block w-6 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Menú Mobile Desplegable */}
+            <div className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+                <nav className="flex flex-col space-y-3 pb-4">
+                    <a href="#" className="p-3 hover:bg-blue-800 rounded-lg transition-colors text-white text-center">PROYECTO</a>
+                    <a href="#" className="p-3 hover:bg-blue-800 rounded-lg transition-colors text-white text-center">¿CÓMO COMPRAR?</a>
+                    <a href="#" className="p-3 hover:bg-blue-800 rounded-lg transition-colors text-white text-center">ASESORES</a>
+                    <a href="#" className="p-3 hover:bg-blue-800 rounded-lg transition-colors font-bold text-white text-center text-lg">CONTÁCTANOS</a>
                 </nav>
             </div>
         </div>
