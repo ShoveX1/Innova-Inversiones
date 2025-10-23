@@ -182,10 +182,11 @@ export default function PrintButton({ isAdmin = false }: PrintButtonProps){
             <button 
                 onClick={() => setIsOpen(!isOpen)}
                 disabled={!isReady}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shadow-md font-medium"
+                className="px-3 py-2 sm:px-4 bg-blue-600 text-white border-2 border-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shadow-md font-medium"
                 title="Descargar plano"
             >
-                🗺️ Descargar Plano
+                <span className="text-xl sm:text-base">🗺️</span>
+                <span className="hidden sm:inline">Descargar Plano</span>
                 <svg 
                     className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
                     fill="none" 
@@ -197,20 +198,20 @@ export default function PrintButton({ isAdmin = false }: PrintButtonProps){
             </button>
 
             {isOpen && isReady && (
-                <div className="absolute top-full left-0 mt-2 w-full bg-white border border-blue-200 rounded-lg shadow-xl z-40 min-w-max overflow-hidden">
+                <div className="absolute top-full left-0 mt-2 w-full  bg-white border border-blue-200 rounded-lg shadow-xl z-40 min-w-max overflow-hidden">
                     <button
                         onClick={() => handleDownload('pdf')}
                         className="w-full px-4 py-2.5 text-left bg-blue-300 hover:bg-blue-50 transition-colors flex items-center gap-3 text-gray-800 border-b border-blue-100"
                     >
-                        <span className="text-lg">📄</span>
-                        <span className="font-medium">PDF</span>
+                        <span className="text-sm sm:text-lg">📄</span>
+                        <span className="text-center sm:font-medium text-sm">PDF</span>
                     </button>
                     <button
                         onClick={() => handleDownload('png')}
                         className="w-full px-4 py-2.5 text-left bg-blue-300 hover:bg-blue-50 transition-colors flex items-center gap-3 text-gray-800"
                     >
-                        <span className="text-lg">🖼️</span>
-                        <span className="font-medium">PNG</span>
+                        <span className="text-sm sm:text-lg text-center">🖼️</span>
+                        <span className="text-center sm:font-medium text-sm">PNG</span>
                     </button>
                 </div>
             )}
