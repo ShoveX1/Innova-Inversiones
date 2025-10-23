@@ -1,7 +1,9 @@
+import PrintButton from '../mapa/plano_componentes/components/printButton';
+
 
 export default function Header() {
   return (
-    <header className="bg-gradient-to-r from-blue-900 to-blue-700 text-white shadow-xl relative overflow-hidden">
+    <header className="bg-gradient-to-r from-blue-900 to-blue-700 text-white shadow-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 max-w-6xl">
             <div className="flex items-center justify-between">
                 {/* Logo y Titulo */ }
@@ -42,6 +44,7 @@ export default function Header() {
                     <a href="#" className="p-2 hover:text-blue-200 transition-colors text-white hover:scale-110 active:scale-95">¿CÓMO COMPRAR?</a>
                     <a href="#" className="p-2 hover:text-blue-200 transition-colors text-white hover:scale-110 active:scale-95">ASESORES</a>
                     <a href="#" className="px-4 py-1 hover:text-blue-200 transition-colors font-bold text-white text-lg hover:scale-110 active:scale-95">CONTÁCTANOS</a>
+                    <PrintButton />
                 </nav>
             </div>
         </div>
