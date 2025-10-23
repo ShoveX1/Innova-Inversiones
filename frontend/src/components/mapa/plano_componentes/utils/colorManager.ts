@@ -6,10 +6,7 @@ interface Lote {
     estado: string;
 }
 
-export function getColorEstado(
-    lote: Lote, 
-    isAdmin: boolean
-    ): string {
-        const colorMap = isAdmin ? COLORS_ADMIN : COLORS_PUBLIC;
-        return colorMap[lote.estado as keyof typeof colorMap] || "#ffffff";
-    }
+export function getColorEstado(lote: Lote, isAdmin: boolean): string {
+    const colorMap = isAdmin ? COLORS_ADMIN : COLORS_PUBLIC;
+    return colorMap[lote.estado as keyof typeof colorMap] || "#ffffff";
+}
