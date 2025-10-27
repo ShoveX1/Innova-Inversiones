@@ -1,3 +1,4 @@
+from pydoc import pager
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -6,7 +7,7 @@ import uuid
 # ==============================
 # TABLAS DE CATÁLOGO
 # ==============================
-class Rol_Usuario(models.Model):
+class RolUsuario(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=20, unique=True)
     descripcion = models.TextField(blank=True, null=True)
@@ -15,7 +16,7 @@ class Rol_Usuario(models.Model):
         return self.nombre
 
 
-class Estado_Lote(models.Model):
+class EstadoLote(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=20, unique=True)
     descripcion = models.TextField(blank=True, null=True)
@@ -38,7 +39,7 @@ class TipoSolicitud(models.Model):
 class Usuario_Perfil(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='usuario', null=True, blank=True)
-    rol = models.ForeignKey(Rol_Usuario, on_delete=models.PROTECT)
+    rol = models.ForeignKey(RolUsuario, on_delete=models.PROTECT)
     estado = models.BooleanField(default=True)  # activo/inactivo
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     ultima_conexion = models.DateTimeField(null=True, blank=True)
@@ -56,7 +57,6 @@ class Cliente(models.Model):
     telefono=models.CharField(max_length=12, null=True, blank=True,)
     email=models.EmailField(max_length=254, unique=True, null=True, blank=True)
     fecha_nacimiento = models.DateField(null=True, blank=True)
-    estado = models.BooleanField(default=True)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 
@@ -74,9 +74,9 @@ class Lote(models.Model):
     area_lote = models.DecimalField(max_digits=20, decimal_places=2)
     precio = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     precio_metro_cuadrado = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    estado = models.ForeignKey(Estado_Lote, on_delete=models.PROTECT, default=1)
+    estado = models.ForeignKey(EstadoLote, on_delete=models.PROTECT, default=1)
     descripcion = models.TextField(null=True, blank=True)
-    relacion_cliente_lote = models.ManyToManyField("Cliente", through="relacion_cliente_lote", related_name="lotes", blank=True)
+    cliente_comprador = models.ManyToManyField("Cliente", through="Cliente_Comprador", related_name="lotes", blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 
@@ -85,18 +85,17 @@ class Lote(models.Model):
 
 
 
-class relacion_cliente_lote(models.Model):
+class Cliente_Comprador(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name="compras", related_query_name="compra")
     lote = models.ForeignKey(Lote, on_delete=models.CASCADE, related_name="compras", related_query_name="compra")
-    fecha = models.DateTimeField(auto_now_add=True)
+    fecha_compra = models.DateTimeField(auto_now_add=True)
     tipo_relacion = models.CharField(
         max_length=20,
         choices=[
             ("Propietario", "Propietario"),
             ("reservante", "Reservante"),
             ("copropietario", "Copropietario"),
-            ("declinado", "Declinado"),
         ]
     )
     porcentaje_participacion = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
@@ -183,8 +182,7 @@ class Transaccion(models.Model):
         RESERVA = "RESERVA", "Reserva"
         VENTA = "VENTA", "Venta"
         CUOTA = "CUOTA", "Cuota"
-        AMORTIZACION = "AMORTIZACION", "Amortización"
-    tipo = models.CharField(max_length=12, choices=Tipo.choices, null=True, blank=True)
+    tipo = models.CharField(max_length=8, choices=Tipo.choices, null=True, blank=True)
     monto = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     metodo_pago = models.CharField(
         max_length=20,
@@ -197,7 +195,7 @@ class Transaccion(models.Model):
         null=True, blank=True
     )
     lote = models.ForeignKey(Lote, on_delete=models.CASCADE)
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(Usuario_Perfil, on_delete=models.CASCADE)
     fecha = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
@@ -205,11 +203,11 @@ class Transaccion(models.Model):
 
 
 
-class Historial_Estado(models.Model):
+class HistorialEstado(models.Model):
     id = models.AutoField(primary_key=True)
     lote = models.ForeignKey(Lote, on_delete=models.CASCADE)
-    estado_anterior = models.ForeignKey(Estado_Lote, on_delete=models.PROTECT, related_name="estado_anterior")
-    estado_nuevo = models.ForeignKey(Estado_Lote, on_delete=models.PROTECT, related_name="estado_nuevo")
+    estado_anterior = models.ForeignKey(EstadoLote, on_delete=models.PROTECT, related_name="estado_anterior")
+    estado_nuevo = models.ForeignKey(EstadoLote, on_delete=models.PROTECT, related_name="estado_nuevo")
     usuario = models.ForeignKey(Usuario_Perfil, on_delete=models.CASCADE)
     creado_en = models.DateTimeField(auto_now_add=True)
 

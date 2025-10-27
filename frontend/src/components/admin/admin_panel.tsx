@@ -260,8 +260,8 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
             : value === 2 ? 'Separado'
             : value === 3 ? 'Vendido'
             : value === 4 ? 'Bloqueado'
-            : value === 5 ? 'Bloqueado Comercial'
-            : value === 6 ? 'Separado comercial'
+            : value === 5 ? 'Bloque Comercial'
+            : value === 6 ? 'Reserva comercial'
             : '';
     }
 
@@ -346,9 +346,9 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
         <div className="h-full w-full flex flex-col min-w-0">
             <div className="bg-white shadow-md overflow-hidden flex flex-col h-full w-full">
                 {/* Header */}
-                <div className="px-3 content-center pt-2 h-[3rem] md:h-[4rem] bg-gradient-to-r from-blue-900 to-blue-700 text-white">
+                <div className="px-3 content-center pt-2 h-[4rem] bg-gradient-to-r from-blue-900 to-blue-700 text-white">
                     <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-sm md:text-lg font-semibold">Administrador de Lotes</h2>
+                        <h2 className="text-sm sm:text-lg font-semibold">Administrador de Lotes</h2>
 
                     {/* Botones de acción globales */}
                     {codigo && hasDrafts(codigo) && (

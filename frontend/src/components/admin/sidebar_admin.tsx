@@ -19,14 +19,14 @@ export default function SidebarAdmin({onToggleSidebar}:SidebarAdminProps) {
     };
 
     return (
-        <div className={`bg-white shadow-md flex flex-col h-screen transition-all duration-300 ${isCollapsed ? 'max-w-16' : 'max-w-sm'}`}>
+        <div className={`bg-white shadow-md overflow-visible flex flex-col h-min-full h-full transition-all duration-300 ${isCollapsed ? 'max-w-16' : 'max-w-sm'}`}>
 
             {/* Header del Panel */}
-            <div className={`px-5 py-4 pt-2 md:pt-4 h-[70px] md:h-[85px] bg-gradient-to-r from-blue-900 to-blue-700 text-white transition-all duration-300 ${isCollapsed ? 'px-2' : ''}`}>
+            <div className={`px-5 py-4 h-[70px] sm:h-[85px] bg-gradient-to-r from-blue-900 to-blue-700 text-white transition-all duration-300 ${isCollapsed ? 'px-2' : ''}`}>
                 <div className="flex items-center justify-center">
                     {isCollapsed ? (
                         /* Estado colapsado - Solo logo */
-                        <div className="flex flex-col items-center h-[70px] md:h-[85px]">
+                        <div className="flex flex-col items-center h-[70px] sm:h-[85px]">
                             <img src="/logo_innova_blanco.svg" alt="Innova Inversiones" className="w-12 h-12" />
                         </div>
                     ) : (
@@ -68,8 +68,8 @@ export default function SidebarAdmin({onToggleSidebar}:SidebarAdminProps) {
             </div>
 
             {/* Contenido del Panel */}
-            <div className="flex-1 overflow-y-auto border-t border-gray-200 bg-gradient-to-r from-blue-900 to-blue-700 text-white scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent hover:scrollbar-thumb-white/30">
-                <div className={`flex flex-col gap-2 py-4  transition-all duration-300 ${isCollapsed ? 'px-2' : 'p-4'}`}>
+            <div className="flex-1 overflow-hidden border-t border-gray-200 bg-gradient-to-r from-blue-900 to-blue-700 text-white h-min-full">
+                <div className={`flex flex-col gap-2 pt-8 pb-8 transition-all duration-300 ${isCollapsed ? 'px-2' : 'p-4'}`}>
                     {/* Plano de Lotes */}
                     <NavLink 
                         to="/admin/plano-lotes" 
