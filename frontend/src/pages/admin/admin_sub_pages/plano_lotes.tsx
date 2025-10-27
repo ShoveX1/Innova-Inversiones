@@ -103,11 +103,11 @@ export default function PlanoLotes({ navCollapsed }: PlanoLotesProps) {
             {/* Panel de Navegación fijo */}
             <div className={`${navCollapsed ? 'ml-16' : 'ml-[16rem]'} h-screen overflow-auto`}>
                 <div className="bg-white shadow-md overflow-hidden flex flex-row justify-between">
-                    <div className="h-[70px] sm:h-[85px]">
+                    <div className="h-[70px] md:h-[85px]">
                         <h1 className="text-transparent bg-clip-text 
                             bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 
                             font-extrabold tracking-tight text-2xl px-4
-                            sm:text-4xl md:text-5xl drop-shadow-sm mt-2">
+                            md:text-4xl lg:text-5xl drop-shadow-sm mt-2">
                             Plano de Lotes
                         </h1>
                         <p className="text-gray-500 text-sm px-4 mb-2">Las Bugambilias-1RA ETAPA</p>
@@ -120,12 +120,12 @@ export default function PlanoLotes({ navCollapsed }: PlanoLotesProps) {
                         <p className="hidden sm:block">{showAdminPanel ? 'Cerrar Edición' : 'Editar Lotes'}</p>
                     </button>
                 </div>
-                <div className="flex-1 flex flex-col sm:flex-row min-h-0 overflow-hidden h-[calc(100vh-4.3rem)] sm:h-auto">
+                <div className="flex-1 flex flex-col items-center sm:flex-row sm:items-start min-h-0 overflow-hidden h-[calc(100vh-70px)] md:h-[calc(100vh-85px)]">
                     {/* Mapa - En móvil va abajo, en sm+ a la derecha */}
                     <div className={`
                         sm:h-full sm:max-h-[87vh] sm:min-h-[87vh] sm:w-full
                         w-[80vw] ${showAdminPanel ? 'h-1/3' : 'h-1/2'} min-h-0 overflow-hidden rounded-lg border border-gray-200
-                        m-1 sm:m-4 mr-2 mb-1`}>
+                        m-1 mb-1 sm:ml-4 sm:mt-4 sm:mb-4 sm:mr-2`}>
                         <MapaLotes  
                             lotes={lotes}
                             loading={loading}
