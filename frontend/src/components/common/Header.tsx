@@ -54,7 +54,7 @@ export default function Header() {
                     <PrintButton />
                 </nav>
 
-                {/* Controles Mobile (PrintButton + Hamburguesa) */}
+                {/* Controles Mobiles (PrintButton + Hamburguesa) */}
                 <div className="md:hidden flex items-center gap-2">
                     {/* PrintButton compacto para móvil */}
                     <PrintButton />
