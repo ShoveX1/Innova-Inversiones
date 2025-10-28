@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import type { PluginOption } from 'vite'
+import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -20,6 +21,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false
       }
+    }
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src')
     }
   }
 })

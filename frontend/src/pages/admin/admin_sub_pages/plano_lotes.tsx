@@ -2,7 +2,7 @@ import AdminPanel from "../../../components/admin/admin_panel";
 import MapaLotes from "../../../components/mapa/mapa_lotes";
 import InfoPanel from "../../../components/mapa/info_panel";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { api } from "../../../services/api";
+import { api } from "@/services";
 
 export interface Lote {
     codigo: string;

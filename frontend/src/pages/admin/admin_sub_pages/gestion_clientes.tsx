@@ -1,3 +1,5 @@
+import ListaClientes from "../../../components/admin/components_gestion_clientes/lista_clientes";
+
 interface GestionClientesProps {
     navCollapsed: boolean;
 }
@@ -17,11 +19,8 @@ export default function GestionClientes({ navCollapsed }: GestionClientesProps) 
                         <p className="text-gray-500 text-sm px-4 mb-2">Administración de clientes</p>
                     </div>
                 </div>
-                <div className="p-4">
-                    <div className="bg-gray-100 rounded-lg p-8 text-center">
-                        <h2 className="text-2xl font-bold text-gray-600 mb-4">Gestión de Clientes en construcción</h2>
-                        <p className="text-gray-500">Esta sección estará disponible próximamente</p>
-                    </div>
+                <div className="">
+                    <ListaClientes />
                 </div>
             </div>
         </div>
