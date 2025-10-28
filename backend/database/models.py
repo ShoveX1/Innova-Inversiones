@@ -56,6 +56,7 @@ class Cliente(models.Model):
     telefono=models.CharField(max_length=12, null=True, blank=True,)
     email=models.EmailField(max_length=254, unique=True, null=True, blank=True)
     fecha_nacimiento = models.DateField(null=True, blank=True)
+    estado = models.BooleanField(default=True)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 

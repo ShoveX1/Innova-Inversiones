@@ -4,6 +4,7 @@ from . import views
 
 
 urlpatterns = [
+    # URLs para Lotes
     path('lotes/', views.Admin_view_lote_codigo, name='admin-view-lote-codigo'),
     path('lotes/update/', views.AdminUpdateLote, name='admin-update-lote'),
     
