@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { api } from "../../services/api";
+import { api } from "@/services";
 import MapaLotes from "../../components/mapa/mapa_lotes";
 import InfoPanel from "../../components/mapa/info_panel";
 

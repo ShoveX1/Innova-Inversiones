@@ -9,12 +9,12 @@ urlpatterns = [
     path('lotes/update/', views.AdminUpdateLote, name='admin-update-lote'),
     
     # URLs para Clientes
-    path('clientes/', views.ListarClientes, name='listar-clientes'),
+    path('clientes/listar/', views.ListarClientes, name='listar-clientes'),
     path('clientes/crear/', views.CrearCliente, name='crear-cliente'),
-    path('clientes/<uuid:cliente_id>/', views.ObtenerCliente, name='obtener-cliente'),
-    path('clientes/<uuid:cliente_id>/actualizar/', views.ActualizarCliente, name='actualizar-cliente'),
-    path('clientes/<uuid:cliente_id>/eliminar/', views.EliminarCliente, name='eliminar-cliente'),
-    path('clientes/<uuid:cliente_id>/activar/', views.ActivarCliente, name='activar-cliente'),
+    path('clientes/obtener/<uuid:cliente_id>/', views.ObtenerCliente, name='obtener-cliente'),
+    path('clientes/actualizar/<uuid:cliente_id>/', views.ActualizarCliente, name='actualizar-cliente'),
+    path('clientes/eliminar/<uuid:cliente_id>/', views.EliminarCliente, name='eliminar-cliente'),
+    path('clientes/activar/<uuid:cliente_id>/', views.ActivarCliente, name='activar-cliente'),
 ]
 
 

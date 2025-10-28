@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { paintLotes } from '../utils/paintLotes';
-import { api } from '../../../../services/api';
+import { api } from '../../../../services/api_base';
 import { jsPDF } from 'jspdf';
 
 interface Lote {
