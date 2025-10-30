@@ -87,11 +87,11 @@ def ListarClientes(request):
     """
     Vista para listar todos los clientes o buscar por filtros
     Parámetros opcionales:
-    - search: Buscar por nombre, apellidos, dni o email
+    - search: Buscar por nombre, apellidos, dni, email, lote, manzana, lote_numero o tipo de relacion
     - estado: Filtrar por estado (true/false)
     """
     try:
-        clientes = Cliente.objects.all()
+        clientes = Cliente.objects.prefetch_related('compras__lote', 'compras__lote__estado')
         
         # Filtro de búsqueda
         search = request.query_params.get('search', None)
@@ -101,8 +101,14 @@ def ListarClientes(request):
                 Q(nombre__icontains=search) |
                 Q(apellidos__icontains=search) |
                 Q(dni__icontains=search) |
-                Q(email__icontains=search)
-            )
+                Q(email__icontains=search) |
+                #lote
+                Q(compras__lote__codigo__icontains=search) |
+                Q(compras__lote__manzana__icontains=search) |
+                Q(compras__lote__lote_numero__icontains=search) |
+                #tipo de relacion cliente_lote
+                Q(compras__tipo_relacion__icontains=search)
+            ).distinct()
         
         # Filtro por estado
         estado_param = request.query_params.get('estado', None)
@@ -111,8 +117,9 @@ def ListarClientes(request):
             clientes = clientes.filter(estado=estado_bool)
         
         # Ordenar por fecha de creación (más reciente primero)
-        clientes = clientes.order_by('-creado_en')
+        clientes = clientes.order_by('id')
         
+
         serializer = ClienteSerializer(clientes, many=True)
         return Response({
             "count": clientes.count(),
@@ -133,7 +140,7 @@ def ObtenerCliente(request, cliente_id):
     Vista para obtener un cliente específico por su ID
     """
     try:
-        cliente = Cliente.objects.get(id=cliente_id)
+        cliente = Cliente.objects.prefetch_related('compras__lote', 'compras__lote__estado').get(id=cliente_id)
         serializer = ClienteSerializer(cliente)
         return Response(serializer.data, status=status.HTTP_200_OK)
         
