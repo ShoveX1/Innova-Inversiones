@@ -1,4 +1,5 @@
 import ListaClientes from "../../../components/admin/components_gestion_clientes/lista_clientes";
+import TarjetaMetricaCliente from "../../../components/admin/components_gestion_clientes/tarjeta_metrica_cliente";
 
 interface GestionClientesProps {
     navCollapsed: boolean;
@@ -20,6 +21,7 @@ export default function GestionClientes({ navCollapsed }: GestionClientesProps) 
                     </div>
                 </div>
                 <div className="">
+                    <TarjetaMetricaCliente />
                     <ListaClientes />
                 </div>
             </div>
