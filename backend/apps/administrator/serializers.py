@@ -2,6 +2,53 @@ from rest_framework import serializers
 from database.models import Cliente, relacion_cliente_lote, Lote
 
 
+class RelacionClienteLoteSerializer(serializers.ModelSerializer):
+    """
+    Serializer para la relación Cliente-Lote
+    Permite crear y actualizar relaciones entre clientes y lotes
+    """
+    lote_codigo = serializers.CharField(source='lote.codigo', read_only=True)
+    lote_manzana = serializers.CharField(source='lote.manzana', read_only=True)
+    lote_numero = serializers.CharField(source='lote.lote_numero', read_only=True)
+    cliente_nombre = serializers.CharField(source='cliente.nombre', read_only=True)
+    cliente_apellidos = serializers.CharField(source='cliente.apellidos', read_only=True)
+    
+    class Meta:
+        model = relacion_cliente_lote
+        fields = [
+            'id',
+            'cliente',
+            'lote',
+            'lote_codigo',
+            'lote_manzana',
+            'lote_numero',
+            'cliente_nombre',
+            'cliente_apellidos',
+            'tipo_relacion',
+            'porcentaje_participacion',
+            'fecha',
+        ]
+        read_only_fields = ['id', 'fecha']
+    
+    def validate_tipo_relacion(self, value):
+        """Validar que el tipo de relación sea válido"""
+        opciones_validas = ['Propietario', 'reservante', 'copropietario', 'declinado']
+        if value not in opciones_validas:
+            raise serializers.ValidationError(
+                f"Tipo de relación inválido. Debe ser uno de: {', '.join(opciones_validas)}"
+            )
+        return value
+    
+    def validate_porcentaje_participacion(self, value):
+        """Validar que el porcentaje esté entre 0 y 100"""
+        if value is not None:
+            if value < 0 or value > 100:
+                raise serializers.ValidationError(
+                    "El porcentaje de participación debe estar entre 0 y 100"
+                )
+        return value
+
+
 class ClienteSerializer(serializers.ModelSerializer):
     """
     Serializer para el modelo Cliente

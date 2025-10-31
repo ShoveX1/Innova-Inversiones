@@ -16,7 +16,20 @@ export const api = {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      // Intentar leer el JSON del error antes de lanzar la excepción
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = { error: `HTTP error! status: ${response.status}` };
+      }
+      
+      const error = new Error(`HTTP error! status: ${response.status}`) as any;
+      error.response = {
+        status: response.status,
+        data: errorData
+      };
+      throw error;
     }
 
     return response.json();

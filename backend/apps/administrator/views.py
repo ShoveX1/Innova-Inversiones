@@ -1,9 +1,9 @@
-from database.models import Lote, Cliente
+from database.models import Lote, Cliente, relacion_cliente_lote
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
-from .serializers import ClienteSerializer
+from .serializers import ClienteSerializer, RelacionClienteLoteSerializer
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
@@ -329,6 +329,289 @@ def ActivarCliente(request, cliente_id):
     except Exception as e:
         return Response({
             "error": "Error al activar el cliente",
+            "detalle": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# =====================================================
+# VISTAS PARA GESTIÓN DE RELACIONES CLIENTE-LOTE
+# =====================================================
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def ListarLotes(request):
+    """
+    Vista para listar todos los lotes disponibles
+    Parámetros opcionales:
+    - search: Buscar por código, manzana o lote_numero
+    """
+    try:
+        lotes = Lote.objects.select_related('estado').all()
+        
+        # Filtro de búsqueda
+        search = request.query_params.get('search', None)
+        if search:
+            from django.db.models import Q
+            lotes = lotes.filter(
+                Q(codigo__icontains=search) |
+                Q(manzana__icontains=search) |
+                Q(lote_numero__icontains=search)
+            )
+        
+        # Ordenar por código
+        lotes = lotes.order_by('codigo')
+        
+        data = [
+            {
+                "id": lote.id,
+                "codigo": lote.codigo,
+                "manzana": lote.manzana,
+                "lote_numero": lote.lote_numero,
+                "estado": lote.estado.id,
+                "estado_nombre": lote.estado.nombre,
+                "area_lote": float(lote.area_lote),
+                "perimetro": float(lote.perimetro),
+                "precio": float(lote.precio) if lote.precio else None,
+                "precio_metro_cuadrado": float(lote.precio_metro_cuadrado) if lote.precio_metro_cuadrado else None,
+                "descripcion": lote.descripcion,
+            }
+            for lote in lotes
+        ]
+        
+        return Response({
+            "count": len(data),
+            "lotes": data
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            "error": "Error al obtener la lista de lotes",
+            "detalle": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def AsignarLoteACliente(request):
+    """
+    Vista para asignar un lote a un cliente
+    Campos requeridos: cliente (UUID), lote (ID), tipo_relacion
+    Campos opcionales: porcentaje_participacion
+    """
+    try:
+        serializer = RelacionClienteLoteSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response({
+                "error": "Datos inválidos",
+                "detalles": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verificar que el cliente existe
+        cliente_id = serializer.validated_data.get('cliente')
+        try:
+            cliente = Cliente.objects.get(id=cliente_id)
+        except Cliente.DoesNotExist:
+            return Response({
+                "error": "Cliente no encontrado"
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                "error": f"Error al buscar cliente: {str(e)}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verificar que el lote existe
+        lote_id = serializer.validated_data.get('lote')
+        try:
+            lote = Lote.objects.get(id=lote_id)
+        except Lote.DoesNotExist:
+            return Response({
+                "error": "Lote no encontrado"
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                "error": f"Error al buscar lote: {str(e)}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verificar si ya existe una relación entre este cliente y lote
+        relacion_existente = relacion_cliente_lote.objects.filter(
+            cliente=cliente,
+            lote=lote
+        ).first()
+        
+        if relacion_existente:
+            return Response({
+                "error": f"Ya existe una relación entre este cliente y el lote. Tipo actual: {relacion_existente.tipo_relacion}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Crear la relación
+        try:
+            relacion = serializer.save()
+            return Response({
+                "message": "Lote asignado al cliente exitosamente",
+                "relacion": RelacionClienteLoteSerializer(relacion).data
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({
+                "error": f"Error al guardar la relación: {str(e)}",
+                "tipo_error": type(e).__name__
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    except Exception as e:
+        import traceback
+        return Response({
+            "error": "Error al asignar el lote al cliente",
+            "detalle": str(e),
+            "tipo_error": type(e).__name__,
+            "traceback": traceback.format_exc()
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['PUT', 'PATCH'])
+@permission_classes([AllowAny])
+def ActualizarRelacionClienteLote(request, relacion_id):
+    """
+    Vista para actualizar una relación cliente-lote existente
+    PUT: Actualización completa
+    PATCH: Actualización parcial
+    """
+    try:
+        relacion = relacion_cliente_lote.objects.get(id=relacion_id)
+        
+        # partial=True permite actualización parcial con PATCH
+        partial = request.method == 'PATCH'
+        serializer = RelacionClienteLoteSerializer(relacion, data=request.data, partial=partial)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "message": "Relación actualizada exitosamente",
+                "relacion": serializer.data
+            }, status=status.HTTP_200_OK)
+        
+        return Response({
+            "error": "Datos inválidos",
+            "detalles": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+        
+    except relacion_cliente_lote.DoesNotExist:
+        return Response({
+            "error": "Relación no encontrada"
+        }, status=status.HTTP_404_NOT_FOUND)
+        
+    except Exception as e:
+        return Response({
+            "error": "Error al actualizar la relación",
+            "detalle": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+def EliminarRelacionClienteLote(request, relacion_id):
+    """
+    Vista para eliminar una relación cliente-lote
+    """
+    try:
+        relacion = relacion_cliente_lote.objects.get(id=relacion_id)
+        cliente_nombre = f"{relacion.cliente.nombre} {relacion.cliente.apellidos}"
+        lote_codigo = relacion.lote.codigo
+        
+        relacion.delete()
+        
+        return Response({
+            "message": f"Relación entre {cliente_nombre} y lote {lote_codigo} eliminada exitosamente"
+        }, status=status.HTTP_200_OK)
+        
+    except relacion_cliente_lote.DoesNotExist:
+        return Response({
+            "error": "Relación no encontrada"
+        }, status=status.HTTP_404_NOT_FOUND)
+        
+    except Exception as e:
+        return Response({
+            "error": "Error al eliminar la relación",
+            "detalle": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def ListarRelacionesClienteLote(request):
+    """
+    Vista para listar todas las relaciones cliente-lote
+    Parámetros opcionales:
+    - cliente_id: Filtrar por cliente específico
+    - lote_id: Filtrar por lote específico
+    - tipo_relacion: Filtrar por tipo de relación
+    - codigo_lote: Buscar por código del lote
+    - nombre_cliente: Buscar por nombre o apellidos del cliente
+    - dni: Buscar por DNI del cliente (dato único)
+    - estado_lote: Buscar por estado del lote (ID o nombre)
+    """
+    try:
+        relaciones = relacion_cliente_lote.objects.select_related(
+            'cliente', 'lote', 'lote__estado'
+        ).all()
+        
+        # Filtro por cliente
+        cliente_id = request.query_params.get('cliente_id', None)
+        if cliente_id:
+            relaciones = relaciones.filter(cliente_id=cliente_id)
+        
+        # Filtro por lote
+        lote_id = request.query_params.get('lote_id', None)
+        if lote_id:
+            relaciones = relaciones.filter(lote_id=lote_id)
+        
+        # Filtro por tipo de relación
+        tipo_relacion = request.query_params.get('tipo_relacion', None)
+        if tipo_relacion:
+            relaciones = relaciones.filter(tipo_relacion=tipo_relacion)
+        
+        # Búsqueda por código de lote
+        codigo_lote = request.query_params.get('codigo_lote', None)
+        if codigo_lote:
+            relaciones = relaciones.filter(lote__codigo__icontains=codigo_lote)
+        
+        # Búsqueda por nombre de cliente (nombre o apellidos)
+        nombre_cliente = request.query_params.get('nombre_cliente', None)
+        if nombre_cliente:
+            from django.db.models import Q
+            relaciones = relaciones.filter(
+                Q(cliente__nombre__icontains=nombre_cliente) |
+                Q(cliente__apellidos__icontains=nombre_cliente)
+            )
+        
+        # Búsqueda por DNI del cliente (dato único)
+        dni = request.query_params.get('dni', None)
+        if dni:
+            relaciones = relaciones.filter(cliente__dni__icontains=dni)
+        
+        # Búsqueda por estado del lote (puede ser ID o nombre)
+        estado_lote = request.query_params.get('estado_lote', None)
+        if estado_lote:
+            try:
+                # Intentar primero como ID
+                estado_id = int(estado_lote)
+                relaciones = relaciones.filter(lote__estado__id=estado_id)
+            except ValueError:
+                # Si no es número, buscar por nombre
+                relaciones = relaciones.filter(lote__estado__nombre__icontains=estado_lote)
+        
+        # Ordenar por fecha (más reciente primero)
+        relaciones = relaciones.order_by('-fecha')
+        
+        serializer = RelacionClienteLoteSerializer(relaciones, many=True)
+        
+        return Response({
+            "count": relaciones.count(),
+            "relaciones": serializer.data
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            "error": "Error al obtener las relaciones",
             "detalle": str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
