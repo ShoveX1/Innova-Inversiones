@@ -106,9 +106,9 @@ export default function ListaClientes(){
                                         <td className="px-2 py-2 border border-blue-500">{cliente.fecha_nacimiento}</td>
                                         <td className="px-2 py-2 border border-blue-500">
                                             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                                cliente.estado ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                cliente.estado ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
                                             }`}>
-                                                {cliente.estado ? 'Activo' : 'Inactivo'}
+                                                {cliente.estado ? 'Activo' : 'Prospecto'}
                                             </span>
                                         </td>
                                         <td className="px-2 py-2 border border-blue-500 truncate" title={cliente.lotes?.length ? `Lotes: ${cliente.lotes.map(l => l.codigo).join(', ')}` : ''}>

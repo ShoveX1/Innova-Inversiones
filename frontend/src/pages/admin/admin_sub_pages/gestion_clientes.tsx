@@ -20,11 +20,13 @@ export default function GestionClientes({ navCollapsed }: GestionClientesProps) 
                         </h1>
                         <p className="text-gray-500 text-sm px-4 mb-2">Administración de clientes</p>
                     </div>
+                    <div className="flex flex-col justify-center items-center pr-4">
+                        <RegistroCliente />
+                    </div>
                 </div>
                 <div className="">
                     <TarjetaMetricaCliente />
                     <ListaClientes />
-                    <RegistroCliente />
                 </div>
             </div>
         </div>
