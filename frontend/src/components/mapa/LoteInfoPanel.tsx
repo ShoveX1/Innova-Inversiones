@@ -26,29 +26,49 @@ const colorMap: Record<string, string> = {
 
 const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible }) => {
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [isHoverEnabled, setIsHoverEnabled] = useState(false);
 
-  // Detectar si es un dispositivo táctil
+  // Detectar si es un dispositivo táctil primario (no desktop con touch)
   useEffect(() => {
     const checkTouchDevice = () => {
-      // Verificar múltiples indicadores de dispositivo táctil
-      const hasTouch = (
+      // Verificar si es un dispositivo táctil primario
+      // Usar media query para detectar si el puntero principal es grueso (touch)
+      const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+      // Verificar si tiene capacidad táctil Y es el método de entrada primario
+      const hasTouchCapability = (
         'ontouchstart' in window ||
         navigator.maxTouchPoints > 0 ||
         // @ts-ignore - msMaxTouchPoints es específico de IE
         navigator.msMaxTouchPoints > 0
       );
-      setIsTouchDevice(hasTouch);
+      
+      // Es un dispositivo táctil si tiene puntero grueso O si tiene touch y no tiene puntero fino (mouse)
+      const isPrimaryTouch = hasCoarsePointer || (hasTouchCapability && !window.matchMedia('(pointer: fine)').matches);
+      
+      setIsTouchDevice(isPrimaryTouch);
+      // En desktop (no táctil), el hover está habilitado por defecto
+      setIsHoverEnabled(!isPrimaryTouch);
     };
 
     checkTouchDevice();
+    
+    // Escuchar cambios en las media queries (por si cambia el dispositivo)
+    const mediaQuery = window.matchMedia('(pointer: coarse)');
+    const handleChange = () => checkTouchDevice();
+    mediaQuery.addEventListener('change', handleChange);
+    
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
   }, []);
 
-  // No mostrar el panel en dispositivos táctiles
+  // No mostrar el panel en dispositivos táctiles primarios
   if (isTouchDevice) {
     return null;
   }
 
-  if (!isVisible || !lote || !position) {
+  // En desktop, mostrar solo si el hover está activado (isVisible)
+  if (!isHoverEnabled || !isVisible || !lote || !position) {
     return null;
   }
 
