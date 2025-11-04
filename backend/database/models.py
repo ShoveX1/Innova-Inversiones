@@ -49,6 +49,7 @@ class Usuario_Perfil(models.Model):
 
 class Cliente(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    usuario = models.OneToOneField(Usuario_Perfil, on_delete=models.CASCADE, related_name='cliente', null=True, blank=True)
     nombre = models.CharField(max_length=100)
     apellidos=models.CharField(max_length=100)
     dni=models.CharField(max_length=8, unique=True, null=True, blank=True)
