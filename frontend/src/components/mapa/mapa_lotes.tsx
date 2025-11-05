@@ -432,11 +432,13 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
         if (!el.hasAttribute('data-hover-attached')) {
           el.addEventListener('mouseenter', (e) => {
             if (isPanningRef.current) return;
+            // Siempre actualizar el estado del panel de hover, incluso si está seleccionado
+            setHoveredLote(lote);
+            const mouseEvent = e as MouseEvent;
+            setHoverPosition({ x: mouseEvent.clientX, y: mouseEvent.clientY });
+            
+            // Solo mostrar el overlay visual si NO está seleccionado (para evitar duplicación con el borde de selección)
             if (el.getAttribute('data-selected') !== 'true') {
-              // Actualizar estado del panel de hover
-              setHoveredLote(lote);
-              const mouseEvent = e as MouseEvent;
-              setHoverPosition({ x: mouseEvent.clientX, y: mouseEvent.clientY });
               const svgRoot = svgDoc.querySelector('svg');
               if (!svgRoot) return;
               let hoverOverlay = svgDoc.getElementById('hover-overlay') as SVGGElement | null;
@@ -487,12 +489,24 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
             }
           });
           
+          // Actualizar posición cuando el mouse se mueve sobre el lote
+          el.addEventListener('mousemove', (e) => {
+            if (isPanningRef.current) return;
+            // Actualizar posición del panel cuando el mouse se mueve
+            const mouseEvent = e as MouseEvent;
+            setHoverPosition({ x: mouseEvent.clientX, y: mouseEvent.clientY });
+            // Asegurar que el lote esté en el estado de hover
+            setHoveredLote(lote);
+          });
+          
           el.addEventListener('mouseleave', () => {
             if (isPanningRef.current) return;
+            // Siempre limpiar el estado del panel de hover
+            setHoveredLote(null);
+            setHoverPosition(null);
+            
+            // Solo limpiar el overlay visual si NO está seleccionado
             if (el.getAttribute('data-selected') !== 'true') {
-              // Limpiar estado del panel de hover
-              setHoveredLote(null);
-              setHoverPosition(null);
               const hoverOverlay = svgDoc.getElementById('hover-overlay');
               if (hoverOverlay) {
                 while (hoverOverlay.firstChild) hoverOverlay.removeChild(hoverOverlay.firstChild);
