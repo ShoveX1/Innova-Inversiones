@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from database.models import Cliente, relacion_cliente_lote, Lote
+import uuid
 
 
 class RelacionClienteLoteSerializer(serializers.ModelSerializer):
@@ -12,6 +13,50 @@ class RelacionClienteLoteSerializer(serializers.ModelSerializer):
     lote_numero = serializers.CharField(source='lote.lote_numero', read_only=True)
     cliente_nombre = serializers.CharField(source='cliente.nombre', read_only=True)
     cliente_apellidos = serializers.CharField(source='cliente.apellidos', read_only=True)
+    # Especificar explícitamente que cliente es un PrimaryKeyRelatedField para UUID
+    cliente = serializers.PrimaryKeyRelatedField(queryset=Cliente.objects.all(), pk_field=serializers.UUIDField())
+    # Especificar explícitamente que lote es un PrimaryKeyRelatedField para Integer
+    lote = serializers.PrimaryKeyRelatedField(queryset=Lote.objects.all())
+    
+    def to_internal_value(self, data):
+        """Validar y convertir los datos antes de que se procesen"""
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"to_internal_value recibido: {data}")
+        
+        # Validar que cliente sea un UUID válido antes de que PrimaryKeyRelatedField lo procese
+        if 'cliente' in data:
+            cliente_value = data.get('cliente')
+            logger.info(f"Valor de cliente recibido: {cliente_value}, tipo: {type(cliente_value)}")
+            
+            if isinstance(cliente_value, str):
+                # Intentar validar que sea un UUID válido
+                try:
+                    uuid.UUID(cliente_value)
+                    logger.info(f"UUID válido: {cliente_value}")
+                except (ValueError, TypeError) as e:
+                    logger.error(f"Error validando UUID: {e}, valor: {cliente_value}")
+                    raise serializers.ValidationError({
+                        'cliente': [f'"{cliente_value}" no es un UUID válido.']
+                    })
+            elif not isinstance(cliente_value, uuid.UUID):
+                logger.error(f"Tipo de cliente inválido: {type(cliente_value)}, valor: {cliente_value}")
+                raise serializers.ValidationError({
+                    'cliente': [f'El campo cliente debe ser un UUID válido (string o UUID), recibido: {type(cliente_value).__name__}']
+                })
+        
+        # Validar que lote sea un entero válido antes de que PrimaryKeyRelatedField lo procese
+        if 'lote' in data:
+            lote_value = data.get('lote')
+            if isinstance(lote_value, str):
+                try:
+                    int(lote_value)
+                except (ValueError, TypeError):
+                    raise serializers.ValidationError({
+                        'lote': [f'"{lote_value}" no es un ID de lote válido. Debe ser un número entero.']
+                    })
+        
+        return super().to_internal_value(data)
     
     class Meta:
         model = relacion_cliente_lote
@@ -29,6 +74,22 @@ class RelacionClienteLoteSerializer(serializers.ModelSerializer):
             'fecha',
         ]
         read_only_fields = ['id', 'fecha']
+    
+    def validate_cliente(self, value):
+        """Validar que el cliente sea válido"""
+        # PrimaryKeyRelatedField ya resuelve el objeto, así que value ya es una instancia de Cliente
+        # Solo validamos que exista (esto ya lo hace PrimaryKeyRelatedField, pero por si acaso)
+        if not isinstance(value, Cliente):
+            raise serializers.ValidationError('El campo cliente debe ser una instancia válida de Cliente.')
+        return value
+    
+    def validate_lote(self, value):
+        """Validar que el lote sea válido"""
+        # PrimaryKeyRelatedField ya resuelve el objeto, así que value ya es una instancia de Lote
+        # Solo validamos que exista (esto ya lo hace PrimaryKeyRelatedField, pero por si acaso)
+        if not isinstance(value, Lote):
+            raise serializers.ValidationError('El campo lote debe ser una instancia válida de Lote.')
+        return value
     
     def validate_tipo_relacion(self, value):
         """Validar que el tipo de relación sea válido"""
