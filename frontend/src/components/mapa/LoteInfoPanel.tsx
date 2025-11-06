@@ -58,7 +58,15 @@ const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible
       <div className="space-y-2 text-xs text-gray-700">
         <div className="flex justify-between items-center">
           <span className="font-medium">Lote:</span>
-          <span className="font-semibold text-gray-900">{lote.codigo}</span>
+          <span 
+            className="font-semibold text-gray-900"
+            style={{ 
+              fontVariantLigatures: 'none',
+              fontFeatureSettings: '"liga" 0, "calt" 0'
+            }}
+          >
+            {lote.codigo}
+          </span>
         </div>
         
         <div className="flex justify-between items-center">

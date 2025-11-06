@@ -1,4 +1,4 @@
-import AdminPanel from "../../../components/admin/admin_panel";
+import AdminPanel from "../../../components/admin/components_plano_lotes/admin_panel";
 import MapaLotes from "../../../components/mapa/mapa_lotes";
 import InfoPanel from "../../../components/mapa/info_panel";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";

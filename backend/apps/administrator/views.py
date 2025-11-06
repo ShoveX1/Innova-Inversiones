@@ -6,6 +6,7 @@ from rest_framework.permissions import AllowAny
 from .serializers import ClienteSerializer, RelacionClienteLoteSerializer
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from django.db.models import Sum
 
 
 @api_view(['GET'])
@@ -42,39 +43,62 @@ def Admin_view_lote_codigo(request):
 def AdminUpdateLote(request):
     codigo = request.query_params.get("codigo") or request.data.get("codigo")
 
-    lote = Lote.objects.get(codigo__iexact=codigo)
+    if not codigo:
+        return Response({"error": "Debe enviar un código"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Solo actualizar campos presentes en el request; si falta la clave, no tocar el valor existente
-    if "input_estado" in request.data:
-        raw_estado = request.data.get("input_estado")
-        lote.estado_id = int(raw_estado)
+    try:
+        lote = Lote.objects.get(codigo__iexact=codigo)
+    except Lote.DoesNotExist:
+        return Response({"error": "Lote no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            "error": "Error al buscar el lote",
+            "detalle": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    if "input_area_lote" in request.data:
-        raw_area_lote = request.data.get("input_area_lote")
-        lote.area_lote = float(raw_area_lote)
+    try:
+        # Solo actualizar campos presentes en el request; si falta la clave, no tocar el valor existente
+        if "input_estado" in request.data:
+            raw_estado = request.data.get("input_estado")
+            lote.estado_id = int(raw_estado)
 
-    if "input_perimetro" in request.data:
-        raw_perimetro = request.data.get("input_perimetro")
-        lote.perimetro = float(raw_perimetro)
+        if "input_area_lote" in request.data:
+            raw_area_lote = request.data.get("input_area_lote")
+            lote.area_lote = float(raw_area_lote)
 
-    if "input_precio" in request.data:
-        raw_precio = request.data.get("input_precio")
-        # Si viene vacío o null explicitamente, interpretarlo como 0; de lo contrario castear a float
-        lote.precio = float(0) if raw_precio in (None, "") else float(raw_precio)
+        if "input_perimetro" in request.data:
+            raw_perimetro = request.data.get("input_perimetro")
+            lote.perimetro = float(raw_perimetro)
 
-    if "input_precio_metro_cuadrado" in request.data:
-        raw_precio_metro_cuadrado = request.data.get("input_precio_metro_cuadrado")
-        lote.precio_metro_cuadrado = float(0) if raw_precio_metro_cuadrado in (None, "") else float(raw_precio_metro_cuadrado)
+        if "input_precio" in request.data:
+            raw_precio = request.data.get("input_precio")
+            # Si viene vacío o null explicitamente, interpretarlo como 0; de lo contrario castear a float
+            lote.precio = float(0) if raw_precio in (None, "") else float(raw_precio)
 
-    if "input_descripcion" in request.data:
-        raw_descripcion = request.data.get("input_descripcion")
-        # Permitir limpiar la descripción con null o string vacío
-        lote.descripcion = None if raw_descripcion in (None, "") else raw_descripcion
+        if "input_precio_metro_cuadrado" in request.data:
+            raw_precio_metro_cuadrado = request.data.get("input_precio_metro_cuadrado")
+            lote.precio_metro_cuadrado = float(0) if raw_precio_metro_cuadrado in (None, "") else float(raw_precio_metro_cuadrado)
 
-    # Guardar cambios
-    lote.save()
+        if "input_descripcion" in request.data:
+            raw_descripcion = request.data.get("input_descripcion")
+            # Permitir limpiar la descripción con null o string vacío
+            lote.descripcion = None if raw_descripcion in (None, "") else raw_descripcion
 
-    return Response({"message": "Lote actualizado correctamente"}, status=status.HTTP_200_OK)
+        # Guardar cambios
+        lote.save()
+
+        return Response({"message": "Lote actualizado correctamente"}, status=status.HTTP_200_OK)
+    
+    except ValueError as e:
+        return Response({
+            "error": "Error de formato en los datos",
+            "detalle": str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            "error": "Error al actualizar el lote",
+            "detalle": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # =====================================================
@@ -399,38 +423,36 @@ def AsignarLoteACliente(request):
     Campos opcionales: porcentaje_participacion
     """
     try:
+        # Log para debug
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Datos recibidos: {request.data}")
+        
         serializer = RelacionClienteLoteSerializer(data=request.data)
         
         if not serializer.is_valid():
+            logger.error(f"Errores del serializer: {serializer.errors}")
             return Response({
                 "error": "Datos inválidos",
                 "detalles": serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Verificar que el cliente existe
-        cliente_id = serializer.validated_data.get('cliente')
-        try:
-            cliente = Cliente.objects.get(id=cliente_id)
-        except Cliente.DoesNotExist:
+        # Obtener cliente y lote del serializer (PrimaryKeyRelatedField ya los resuelve como instancias)
+        cliente = serializer.validated_data.get('cliente')
+        lote = serializer.validated_data.get('lote')
+        
+        logger.info(f"Cliente obtenido del serializer: {cliente}, tipo: {type(cliente)}")
+        logger.info(f"Lote obtenido del serializer: {lote}, tipo: {type(lote)}")
+        
+        # Verificar que cliente y lote son instancias válidas
+        if not isinstance(cliente, Cliente):
             return Response({
-                "error": "Cliente no encontrado"
-            }, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({
-                "error": f"Error al buscar cliente: {str(e)}"
+                "error": f"Error: El cliente no es una instancia válida. Tipo recibido: {type(cliente)}"
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Verificar que el lote existe
-        lote_id = serializer.validated_data.get('lote')
-        try:
-            lote = Lote.objects.get(id=lote_id)
-        except Lote.DoesNotExist:
+        if not isinstance(lote, Lote):
             return Response({
-                "error": "Lote no encontrado"
-            }, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({
-                "error": f"Error al buscar lote: {str(e)}"
+                "error": f"Error: El lote no es una instancia válida. Tipo recibido: {type(lote)}"
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Verificar si ya existe una relación entre este cliente y lote
@@ -443,6 +465,26 @@ def AsignarLoteACliente(request):
             return Response({
                 "error": f"Ya existe una relación entre este cliente y el lote. Tipo actual: {relacion_existente.tipo_relacion}"
             }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validar porcentaje de participación si es copropietario
+        tipo_relacion = serializer.validated_data.get('tipo_relacion')
+        porcentaje = serializer.validated_data.get('porcentaje_participacion')
+        
+        if tipo_relacion == 'copropietario' and porcentaje is not None:
+            # Calcular el porcentaje total de participación de otros copropietarios
+            porcentaje_total_existente = relacion_cliente_lote.objects.filter(
+                lote=lote,
+                tipo_relacion='copropietario'
+            ).exclude(cliente=cliente).aggregate(
+                total=Sum('porcentaje_participacion')
+            )['total'] or 0
+            
+            porcentaje_total = float(porcentaje_total_existente) + float(porcentaje)
+            
+            if porcentaje_total > 100:
+                return Response({
+                    "error": f"El porcentaje total de participación excede el 100%. Porcentaje actual de otros copropietarios: {porcentaje_total_existente}%, intentando agregar: {porcentaje}%"
+                }, status=status.HTTP_400_BAD_REQUEST)
         
         # Crear la relación
         try:

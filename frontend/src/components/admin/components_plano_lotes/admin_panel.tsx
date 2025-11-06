@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { api } from "../../services/api_base";
+import { api } from "../../../services/api_base";
+import { clienteLoteApi } from '@/services';
+import RelacionClienteLote from "./relacion_cliente_lote";
 
 
 export interface Lote_admin{
@@ -11,13 +13,26 @@ export interface Lote_admin{
     precio_metro_cuadrado: number| null;
     descripcion: string| null;
     actualizado_en: string;
-};
+}
+
+interface RelacionClienteLote_admin {
+    id: string;
+    cliente: string;
+    lote: number;
+    cliente_nombre?: string;
+    cliente_apellidos?: string;
+    tipo_relacion: string;
+    porcentaje_participacion: number | null;
+    fecha?: string;
+}
 
 type AdminPanelProps = { codigo?: string | null };
 export default function AdminPanel({ codigo }: AdminPanelProps){
     const [lotes, setLotes] = useState<Lote_admin[]>([]);
+    const [relaciones, setRelaciones] = useState<Record<string, RelacionClienteLote_admin[]>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [modalRelacionAbierto, setModalRelacionAbierto] = useState<{ codigo: string; estado: number; loteId?: number } | null>(null);
     
     async function cargarLotes(selected?: string | null){
         try{
@@ -27,22 +42,70 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
             const code = (selected ?? codigo) ?? null;
             if(!code){
                 setLotes([]);
+                setRelaciones({});
                 return;
             }
             const data = await api.get(`/api/admin/lotes/?codigo=${encodeURIComponent(code)}`);
             if(!data || typeof data !== 'object') throw new Error('Respuesta inesperada')
             const items = Array.isArray(data) ? data : [data];
             setLotes(items as Lote_admin[]);
+            
+            // Cargar relaciones para cada lote
+            await cargarRelaciones(items as Lote_admin[]);
         }catch(e: any){
             setError(e.message || "Error al cargar lotes");
             setLotes([]);
+            setRelaciones({});
         }finally{
             setLoading(false);
         }
     }
 
+    async function cargarRelaciones(lotesData: Lote_admin[]){
+        try {
+            const nuevasRelaciones: Record<string, RelacionClienteLote_admin[]> = {};
+            
+            for (const lote of lotesData) {
+                try {
+                    // Buscar el ID del lote usando el código
+                    const lotesLista = await api.get(`/api/admin/lotes/listar/?search=${encodeURIComponent(lote.codigo)}`);
+                    
+                    // El endpoint devuelve { count: number, lotes: Lote[] }
+                    const lotes = lotesLista?.lotes || (Array.isArray(lotesLista) ? lotesLista : []);
+                    const loteEncontrado = Array.isArray(lotes) 
+                        ? lotes.find((l: any) => l.codigo?.toLowerCase() === lote.codigo.toLowerCase())
+                        : null;
+                    
+                    if (loteEncontrado?.id) {
+                        const relacionesData = await clienteLoteApi.listar({ lote_id: loteEncontrado.id });
+                        nuevasRelaciones[lote.codigo] = relacionesData?.relaciones || [];
+                    }
+                } catch(e: any) {
+                    console.error(`Error al cargar relaciones para lote ${lote.codigo}:`, e);
+                    // Continuar con el siguiente lote
+                }
+            }
+            
+            setRelaciones(nuevasRelaciones);
+        } catch(e: any) {
+            console.error('Error al cargar relaciones:', e);
+            // No mostramos error al usuario, solo dejamos las relaciones vacías
+        }
+    }
+
+    function tipoRelacionLabel(value: string){
+        const labels: Record<string, string> = {
+            'Propietario': '👤 Propietario',
+            'reservante': '📋 Reservante',
+            'copropietario': '👥 Copropietario',
+            'declinado': '❌ Declinado'
+        };
+        return labels[value] || value;
+    }
+
     useEffect(() =>{
         cargarLotes(codigo ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [codigo]);
 
     // Edición en línea
@@ -445,12 +508,92 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
                                         {renderEditableCell(l, 'descripcion', 'text')}
                                     </div>
                                 </div>
+                                {/* Cliente - Visualización y asignación */}
+                                <div className="space-y-1 md:col-span-2">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                            Clientes Asignados ({relaciones[l.codigo]?.length || 0})
+                                        </label>
+                                        <button
+                                            onClick={async () => {
+                                                // Obtener el ID del lote usando el código
+                                                try {
+                                                    const lotesLista = await api.get(`/api/admin/lotes/listar/?search=${encodeURIComponent(l.codigo)}`);
+                                                    
+                                                    // El endpoint devuelve { count: number, lotes: Lote[] }
+                                                    const lotes = lotesLista?.lotes || (Array.isArray(lotesLista) ? lotesLista : []);
+                                                    const loteEncontrado = Array.isArray(lotes) 
+                                                        ? lotes.find((lot: any) => lot.codigo?.toLowerCase() === l.codigo.toLowerCase())
+                                                        : null;
+                                                    
+                                                    if (!loteEncontrado?.id) {
+                                                        setError(`No se encontró el ID del lote con código: ${l.codigo}`);
+                                                        return;
+                                                    }
+                                                    
+                                                    setModalRelacionAbierto({
+                                                        codigo: l.codigo,
+                                                        estado: l.estado,
+                                                        loteId: loteEncontrado.id
+                                                    });
+                                                } catch(e: any) {
+                                                    setError(`Error al abrir el formulario: ${e.message || 'Error desconocido'}`);
+                                                }
+                                            }}
+                                            className="px-3 py-1.5 text-xs sm:text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium flex items-center gap-1"
+                                        >
+                                            <span>+</span>
+                                            <span>Asignar Cliente</span>
+                                        </button>
+                                    </div>
+                                    
+                                    {/* Lista de clientes asignados */}
+                                    <div className="space-y-2">
+                                        {relaciones[l.codigo] && relaciones[l.codigo].length > 0 ? (
+                                            relaciones[l.codigo].map((relacion) => (
+                                                <div key={relacion.id} className="bg-white rounded-md p-3 border border-gray-200 shadow-sm">
+                                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-800">
+                                                        <span className="font-medium">
+                                                            {relacion.cliente_nombre} {relacion.cliente_apellidos}
+                                                        </span>
+                                                        <span className="text-gray-600">-</span>
+                                                        <span>{tipoRelacionLabel(relacion.tipo_relacion)}</span>
+                                                        {relacion.tipo_relacion === 'copropietario' && relacion.porcentaje_participacion && (
+                                                            <>
+                                                                <span className="text-gray-600">-</span>
+                                                                <span className="text-gray-600">{relacion.porcentaje_participacion}%</span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-xs sm:text-sm text-gray-500 italic p-3 bg-gray-50 rounded-md border border-gray-200 text-center">
+                                                No hay clientes asignados a este lote
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                         </div>
                     ))}
                 </div>
             </div>
+            
+            {/* Modal para asignar cliente */}
+            {modalRelacionAbierto && (
+                <RelacionClienteLote
+                    codigoLote={modalRelacionAbierto.codigo}
+                    estadoLote={modalRelacionAbierto.estado}
+                    loteId={modalRelacionAbierto.loteId}
+                    onCerrar={() => setModalRelacionAbierto(null)}
+                    onAsignado={async () => {
+                        // Recargar los lotes y relaciones después de asignar
+                        await cargarLotes(codigo ?? null);
+                    }}
+                />
+            )}
         </div>
     )
 }
