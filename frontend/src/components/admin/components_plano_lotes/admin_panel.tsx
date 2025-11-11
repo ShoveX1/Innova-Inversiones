@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../services/api_base";
-import { clienteLoteApi } from '@/services';
+import { clienteLoteApi, clientesApi } from '@/services';
 import RelacionClienteLote from "./relacion_cliente_lote";
 
 
@@ -26,10 +26,15 @@ interface RelacionClienteLote_admin {
     fecha?: string;
 }
 
+interface Cliente_admin {
+    id: string;
+    estado_financiero_actual: string;
+}
 type AdminPanelProps = { codigo?: string | null };
 export default function AdminPanel({ codigo }: AdminPanelProps){
     const [lotes, setLotes] = useState<Lote_admin[]>([]);
     const [relaciones, setRelaciones] = useState<Record<string, RelacionClienteLote_admin[]>>({});
+    const [clientes, setClientes] = useState<Record<string, Cliente_admin>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [modalRelacionAbierto, setModalRelacionAbierto] = useState<{ codigo: string; estado: number; loteId?: number } | null>(null);
@@ -64,6 +69,7 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
     async function cargarRelaciones(lotesData: Lote_admin[]){
         try {
             const nuevasRelaciones: Record<string, RelacionClienteLote_admin[]> = {};
+                const nuevosClientes: Record<string, Cliente_admin> = {};
             
             for (const lote of lotesData) {
                 try {
@@ -79,6 +85,25 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
                     if (loteEncontrado?.id) {
                         const relacionesData = await clienteLoteApi.listar({ lote_id: loteEncontrado.id });
                         nuevasRelaciones[lote.codigo] = relacionesData?.relaciones || [];
+                        
+                        // Cargar estados de los clientes
+                        for (const relacion of relacionesData?.relaciones || []) {
+                            if (relacion.cliente && !nuevosClientes[relacion.cliente]) {
+                                try {
+                                    const clienteData = await clientesApi.obtener(relacion.cliente);
+                                    nuevosClientes[relacion.cliente] = {
+                                        id: relacion.cliente,
+                                        estado_financiero_actual: clienteData.estado_financiero_actual || 'al_dia'
+                                    };
+                                } catch(e: any) {
+                                    console.error(`Error al cargar cliente ${relacion.cliente}:`, e);
+                                    nuevosClientes[relacion.cliente] = {
+                                        id: relacion.cliente,
+                                        estado_financiero_actual: 'al_dia'
+                                    };
+                                }
+                            }
+                        }
                     }
                 } catch(e: any) {
                     console.error(`Error al cargar relaciones para lote ${lote.codigo}:`, e);
@@ -87,6 +112,7 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
             }
             
             setRelaciones(nuevasRelaciones);
+            setClientes(prev => ({ ...prev, ...nuevosClientes }));
         } catch(e: any) {
             console.error('Error al cargar relaciones:', e);
             // No mostramos error al usuario, solo dejamos las relaciones vacías
@@ -114,6 +140,7 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
     const [draftValue, setDraftValue] = useState<string>('');
     const [saving, setSaving] = useState<boolean>(false);
     const [drafts, setDrafts] = useState<Record<string, Partial<Record<EditableField, any>>>>({});
+    const [clienteDrafts, setClienteDrafts] = useState<Record<string, string>>({}); // clienteId -> estado_financiero_actual
     const [channel] = useState<BroadcastChannel | null>(() => {
         if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
             try { return new BroadcastChannel('lotes-updates'); } catch { return null; }
@@ -186,7 +213,18 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
     }
 
     function hasDrafts(codigo: string){
-        return !!drafts[codigo] && Object.keys(drafts[codigo] as object).length > 0;
+        const loteDrafts = !!drafts[codigo] && Object.keys(drafts[codigo] as object).length > 0;
+        // Verificar si hay cambios pendientes en clientes de este lote
+        const relacionesLote = relaciones[codigo] || [];
+        const tieneCambiosClientes = relacionesLote.some(rel => clienteDrafts[rel.cliente]);
+        return loteDrafts || tieneCambiosClientes;
+    }
+    
+    function updateClienteDraft(clienteId: string, estado: string){
+        setClienteDrafts(prev => ({
+            ...prev,
+            [clienteId]: estado
+        }));
     }
 
     function normalizeRowDraft(rowDraft: Partial<Record<EditableField, any>>): Partial<Lote_admin>{
@@ -201,20 +239,53 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
 
     async function saveRow(cod: string){
         const rowDraft = drafts[cod];
-        if (!rowDraft) return;
+        const relacionesLote = relaciones[cod] || [];
+        const clientesConCambios = relacionesLote.filter(rel => clienteDrafts[rel.cliente]);
+        
+        if (!rowDraft && clientesConCambios.length === 0) return;
+        
         try{
             setSaving(true);
-            const payload: any = { codigo: cod };
-            for (const k of Object.keys(rowDraft) as EditableField[]){
-                const payloadKey = fieldToPayloadKey[k];
-                const v = rowDraft[k];
-                if (k === 'descripcion') payload[payloadKey] = v == null || v === '' ? null : String(v);
-                else payload[payloadKey] = v === '' || v == null ? 0 : Number(v);
+            
+            // Guardar cambios del lote
+            if (rowDraft) {
+                const payload: any = { codigo: cod };
+                for (const k of Object.keys(rowDraft) as EditableField[]){
+                    const payloadKey = fieldToPayloadKey[k];
+                    const v = rowDraft[k];
+                    if (k === 'descripcion') payload[payloadKey] = v == null || v === '' ? null : String(v);
+                    else payload[payloadKey] = v === '' || v == null ? 0 : Number(v);
+                }
+                await api.put(`/api/admin/lotes/update/?codigo=${cod}`, payload);
+                const normalized = normalizeRowDraft(rowDraft);
+                setLotes(prev => prev.map(l => l.codigo === cod ? ({ ...l, ...normalized, actualizado_en: new Date().toISOString() }) : l));
+                setDrafts(prev => { const { [cod]: _, ...rest } = prev; return rest; });
             }
-            await api.put(`/api/admin/lotes/update/?codigo=${cod}`, payload);
-            const normalized = normalizeRowDraft(rowDraft);
-            setLotes(prev => prev.map(l => l.codigo === cod ? ({ ...l, ...normalized, actualizado_en: new Date().toISOString() }) : l));
-            setDrafts(prev => { const { [cod]: _, ...rest } = prev; return rest; });
+            
+            // Guardar cambios de clientes
+            for (const relacion of clientesConCambios) {
+                const nuevoEstado = clienteDrafts[relacion.cliente];
+                await clientesApi.actualizar(relacion.cliente, { estado_financiero_actual: nuevoEstado });
+                // Actualizar el estado local del cliente
+                setClientes(prev => ({
+                    ...prev,
+                    [relacion.cliente]: {
+                        id: relacion.cliente,
+                        estado_financiero_actual: nuevoEstado
+                    }
+                }));
+            }
+            
+            // Limpiar drafts de clientes guardados
+            const clientesGuardados = clientesConCambios.map(rel => rel.cliente);
+            setClienteDrafts(prev => {
+                const nuevo = { ...prev };
+                clientesGuardados.forEach(clienteId => {
+                    delete nuevo[clienteId];
+                });
+                return nuevo;
+            });
+            
             setEditing(null);
             setDraftValue('');
             // Notificar a otras páginas/ventanas que hubo una actualización
@@ -228,6 +299,15 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
 
     function discardRow(cod: string){
         setDrafts(prev => { const { [cod]: _, ...rest } = prev; return rest; });
+        // Descartar cambios de clientes de este lote
+        const relacionesLote = relaciones[cod] || [];
+        setClienteDrafts(prev => {
+            const nuevo = { ...prev };
+            relacionesLote.forEach(rel => {
+                delete nuevo[rel.cliente];
+            });
+            return nuevo;
+        });
         if (editing?.codigo === cod) closeEditor();
     }
 
@@ -552,7 +632,7 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
                                         {relaciones[l.codigo] && relaciones[l.codigo].length > 0 ? (
                                             relaciones[l.codigo].map((relacion) => (
                                                 <div key={relacion.id} className="bg-white rounded-md p-3 border border-gray-200 shadow-sm">
-                                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-800">
+                                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-800 mb-2">
                                                         <span className="font-medium">
                                                             {relacion.cliente_nombre} {relacion.cliente_apellidos}
                                                         </span>
@@ -564,6 +644,20 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
                                                                 <span className="text-gray-600">{relacion.porcentaje_participacion}%</span>
                                                             </>
                                                         )}
+                                                    </div>
+                                                    <div className="mt-2">
+                                                        <label className="block text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
+                                                            Estado del Cliente
+                                                        </label>
+                                                        <select
+                                                            value={clienteDrafts[relacion.cliente] || clientes[relacion.cliente]?.estado_financiero_actual || 'al_dia'}
+                                                            onChange={(e) => updateClienteDraft(relacion.cliente, e.target.value)}
+                                                            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-xs sm:text-sm text-gray-800"
+                                                        >
+                                                            <option value="al_dia">Al día</option>
+                                                            <option value="deudor">Deudor</option>
+                                                            <option value="conciliado">Conciliado</option>
+                                                        </select>
                                                     </div>
                                                 </div>
                                             ))
