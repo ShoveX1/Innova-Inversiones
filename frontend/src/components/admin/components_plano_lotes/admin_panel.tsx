@@ -552,7 +552,7 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
                                         {relaciones[l.codigo] && relaciones[l.codigo].length > 0 ? (
                                             relaciones[l.codigo].map((relacion) => (
                                                 <div key={relacion.id} className="bg-white rounded-md p-3 border border-gray-200 shadow-sm">
-                                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-800">
+                                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-800 mb-2">
                                                         <span className="font-medium">
                                                             {relacion.cliente_nombre} {relacion.cliente_apellidos}
                                                         </span>
@@ -564,6 +564,18 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
                                                                 <span className="text-gray-600">{relacion.porcentaje_participacion}%</span>
                                                             </>
                                                         )}
+                                                    </div>
+                                                    <div className="mt-2">
+                                                        <label className="block text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
+                                                            Estado del Cliente
+                                                        </label>
+                                                        <select
+                                                            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-xs sm:text-sm text-gray-800"
+                                                        >
+                                                            <option value="al_dia">Al día</option>
+                                                            <option value="deudor">Deudor</option>
+                                                            <option value="conciliado">Conciliado</option>
+                                                        </select>
                                                     </div>
                                                 </div>
                                             ))
