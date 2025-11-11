@@ -127,6 +127,7 @@ class ClienteSerializer(serializers.ModelSerializer):
             'email',
             'fecha_nacimiento',
             'estado',
+            'estado_financiero_actual',
             'creado_en',
             'actualizado_en',
             'lotes'
@@ -176,5 +177,15 @@ class ClienteSerializer(serializers.ModelSerializer):
                 # Si estamos creando, verificar que no exista
                 if Cliente.objects.filter(email=value).exists():
                     raise serializers.ValidationError("Ya existe un cliente con este email")
+        return value
+    
+    def validate_estado_financiero_actual(self, value):
+        """Validar que el estado financiero actual sea válido"""
+        if value is not None:
+            opciones_validas = ['al_dia', 'deudor', 'conciliado']
+            if value not in opciones_validas:
+                raise serializers.ValidationError(
+                    f"Estado financiero inválido. Debe ser uno de: {', '.join(opciones_validas)}"
+                )
         return value
 

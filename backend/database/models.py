@@ -58,6 +58,12 @@ class Cliente(models.Model):
     email=models.EmailField(max_length=254, unique=True, null=True, blank=True)
     fecha_nacimiento = models.DateField(null=True, blank=True)
     estado = models.BooleanField(default=True)
+    estado_financiero_actual=models.CharField(max_length=20, null=True, blank=True,
+        choices=[
+            ("al_dia", "Al día"),
+            ("deudor", "Deudor"),
+            ("conciliado", "Conciliado"),
+        ])
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 
