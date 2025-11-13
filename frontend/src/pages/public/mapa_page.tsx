@@ -88,6 +88,7 @@ export default function MapaPage() {
           error={error}
           onSelectCodigo={setSelectedCodigo}
           selectedCodigo={selectedCodigo}
+          isAdmin={false}
         />
       </div>
 
@@ -98,6 +99,7 @@ export default function MapaPage() {
           error={error}
           lote={selectedLote}
           onClose={() => setSelectedCodigo(null)}
+          isAdmin={false}
         />
       )}
     </div>

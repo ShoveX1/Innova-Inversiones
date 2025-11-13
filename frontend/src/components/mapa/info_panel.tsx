@@ -1,5 +1,23 @@
 // src/components/info_panel.tsx
 import { useEffect, useState } from 'react';
+import { clienteLoteApi } from '../../services/admin/cliente_lote_api';
+
+interface Cliente {
+  id: string;
+  nombre: string;
+  apellidos: string;
+  dni: string;
+}
+
+interface RelacionClienteLote {
+  id: string;
+  cliente: Cliente;
+  cliente_nombre: string;
+  cliente_apellidos: string;
+  cliente_dni?: string;
+  tipo_relacion: string;
+}
+
 type Props = {
   loading?: boolean;
   error?: string | null;
@@ -15,6 +33,7 @@ type Props = {
     descripcion: string | null;
   } | null;
   onClose?: () => void;
+  isAdmin?: boolean; // Solo mostrar información del cliente si es admin
 };
 
 const currency = new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" });
@@ -37,12 +56,16 @@ function estadoBadge(estado: string, estadoNombre: string) {
   );
 }
 
-export default function InfoPanel({ loading, error, lote, onClose }: Props) {
+export default function InfoPanel({ loading, error, lote, onClose, isAdmin = false }: Props) {
   // Estado de arrastre
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 16, y: 16 });
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  
+  // Estado para información del cliente relacionado
+  const [clienteRelacionado, setClienteRelacionado] = useState<RelacionClienteLote | null>(null);
+  const [cargandoCliente, setCargandoCliente] = useState(false);
 
   const onMouseDownRoot = (e: React.MouseEvent) => {
     if (isMobile) return; // En móvil no es movible
@@ -89,6 +112,42 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
+
+  // Obtener información del cliente relacionado al lote (solo si es admin)
+  useEffect(() => {
+    if (!lote || !isAdmin) {
+      setClienteRelacionado(null);
+      return;
+    }
+
+    async function obtenerClienteRelacionado() {
+      if (!lote) return;
+      
+      try {
+        setCargandoCliente(true);
+        const response = await clienteLoteApi.listar({ codigo_lote: lote.codigo });
+        const data = response as { count: number; relaciones: RelacionClienteLote[] };
+        
+        // Obtener la primera relación (puede haber múltiples, pero mostramos la primera)
+        if (data.relaciones && data.relaciones.length > 0) {
+          // Priorizar Propietario, luego Reservante, luego otros
+          const relacion = data.relaciones.find(r => r.tipo_relacion === 'Propietario') 
+            || data.relaciones.find(r => r.tipo_relacion === 'reservante')
+            || data.relaciones[0];
+          setClienteRelacionado(relacion);
+        } else {
+          setClienteRelacionado(null);
+        }
+      } catch (error) {
+        console.error('Error al obtener cliente relacionado:', error);
+        setClienteRelacionado(null);
+      } finally {
+        setCargandoCliente(false);
+      }
+    }
+
+    obtenerClienteRelacionado();
+  }, [lote?.codigo, isAdmin]);
 
   // Si no hay lote seleccionado, no mostrar el panel
   if (!lote && !loading && !error) {
@@ -268,6 +327,40 @@ export default function InfoPanel({ loading, error, lote, onClose }: Props) {
                   <span>📍</span>
                   <span className="font-medium">Descripción: {lote.descripcion}</span>
                 </div>
+
+                {/* Información del Cliente - Solo visible para admin */}
+                {isAdmin && (
+                  <div className="pt-2 border-t border-gray-200 mt-2">
+                    {cargandoCliente ? (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600 font-medium">Cliente:</span>
+                        <span className="text-xs text-gray-500">Cargando...</span>
+                      </div>
+                    ) : clienteRelacionado ? (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-600 font-medium">Cliente:</span>
+                          <span className="text-xs sm:text-sm font-semibold text-gray-900 text-right">
+                            {clienteRelacionado.cliente_nombre} {clienteRelacionado.cliente_apellidos}
+                          </span>
+                        </div>
+                        {clienteRelacionado.cliente_dni && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-600 font-medium">DNI:</span>
+                            <span className="text-xs sm:text-sm font-semibold text-gray-900">
+                              {clienteRelacionado.cliente_dni}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600 font-medium">Cliente:</span>
+                        <span className="text-xs text-gray-500">Sin asignar</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
             )}
         </div>
