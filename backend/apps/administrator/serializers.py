@@ -13,6 +13,7 @@ class RelacionClienteLoteSerializer(serializers.ModelSerializer):
     lote_numero = serializers.CharField(source='lote.lote_numero', read_only=True)
     cliente_nombre = serializers.CharField(source='cliente.nombre', read_only=True)
     cliente_apellidos = serializers.CharField(source='cliente.apellidos', read_only=True)
+    cliente_dni = serializers.CharField(source='cliente.dni', read_only=True)
     # Especificar explícitamente que cliente es un PrimaryKeyRelatedField para UUID
     cliente = serializers.PrimaryKeyRelatedField(queryset=Cliente.objects.all(), pk_field=serializers.UUIDField())
     # Especificar explícitamente que lote es un PrimaryKeyRelatedField para Integer
@@ -69,6 +70,7 @@ class RelacionClienteLoteSerializer(serializers.ModelSerializer):
             'lote_numero',
             'cliente_nombre',
             'cliente_apellidos',
+            'cliente_dni',
             'tipo_relacion',
             'porcentaje_participacion',
             'fecha',

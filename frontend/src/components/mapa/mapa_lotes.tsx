@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
-import LoteInfoPanel from './LoteInfoPanel';
+import ModalLoteInfoPanel from './ModalLoteInfoPanel';
 
 
 interface Lote {
@@ -17,9 +17,10 @@ type Props = {
   selectedCodigo?: string | null;
   colorOverrides?: Partial<Record<string, string>>;
   disableAutoZoom?: boolean;
+  isAdmin?: boolean; // Indica si es vista de admin
 };
 
-export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selectedCodigo = null, colorOverrides, disableAutoZoom = false }: Props) {
+export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selectedCodigo = null, colorOverrides, disableAutoZoom = false, isAdmin = false }: Props) {
   const objectRef = useRef<HTMLObjectElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [svgLoaded, setSvgLoaded] = useState(false);
@@ -1244,10 +1245,11 @@ export default function MapaLotes({ lotes, loading, error, onSelectCodigo, selec
       </div>
 
       {/* Panel de información del lote */}
-      <LoteInfoPanel 
+      <ModalLoteInfoPanel 
         lote={hoveredLote}
         position={hoverPosition}
         isVisible={!!hoveredLote && !!hoverPosition}
+        isAdmin={isAdmin}
       />
     </div>
   );

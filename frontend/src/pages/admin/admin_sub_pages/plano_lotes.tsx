@@ -134,6 +134,7 @@ export default function PlanoLotes({ navCollapsed }: PlanoLotesProps) {
                             selectedCodigo={selectedCodigo}
                             colorOverrides={{ "4": "#9ca3af", "5": "#e0e0e0", "6": "#FF8C00"}}
                             disableAutoZoom={true}
+                            isAdmin={true}
                         />
                         {/* Info Panel superpuesto */}
                         {showInfoPanel && (
@@ -142,6 +143,7 @@ export default function PlanoLotes({ navCollapsed }: PlanoLotesProps) {
                                 error={error}
                                 lote={selectedLote}
                                 onClose={() => setShowInfoPanel(false)}
+                                isAdmin={true}
                             />
                         )}
                     </div>
