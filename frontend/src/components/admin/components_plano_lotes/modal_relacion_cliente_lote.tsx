@@ -77,13 +77,23 @@ export default function RelacionClienteLote({
             const todosClientes = data.clientes || [];
             
             // Filtrar localmente por término de búsqueda
+            // Búsqueda independiente: nombre, apellidos o DNI
             const terminoLower = termino.toLowerCase();
-            const filtrados = todosClientes.filter(cliente => 
-                cliente.nombre.toLowerCase().includes(terminoLower) ||
-                cliente.apellidos.toLowerCase().includes(terminoLower) ||
-                cliente.dni.includes(termino) ||
-                (cliente.email && cliente.email.toLowerCase().includes(terminoLower))
-            );
+            const terminoOriginal = termino.trim(); // Para DNI (sin convertir a minúsculas)
+            
+            const filtrados = todosClientes.filter(cliente => {
+                // Buscar en nombre (case-insensitive)
+                const coincideNombre = cliente.nombre.toLowerCase().includes(terminoLower);
+                
+                // Buscar en apellidos (case-insensitive)
+                const coincideApellidos = cliente.apellidos.toLowerCase().includes(terminoLower);
+                
+                // Buscar en DNI (exacto, sin case-insensitive porque son números)
+                const coincideDNI = cliente.dni ? cliente.dni.includes(terminoOriginal) : false;
+                
+                // Retorna true si coincide con CUALQUIERA de los campos
+                return coincideNombre || coincideApellidos || coincideDNI;
+            });
             
             setClientes(filtrados.slice(0, 10)); // Limitar a 10 resultados
         } catch(e: any) {
@@ -283,8 +293,9 @@ export default function RelacionClienteLote({
                                         buscarClientes(nuevoValor);
                                     }
                                 }}
-                                placeholder="Buscar por nombre, DNI o email..."
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Buscar por nombre, apellidos o DNI..."
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none 
+                                        focus:ring-2 focus:ring-blue-500 bg-white text-black"
                                 disabled={asignando}
                             />
                             {buscandoClientes && (
@@ -301,7 +312,7 @@ export default function RelacionClienteLote({
                                     <button
                                         key={cliente.id}
                                         onClick={() => seleccionarCliente(cliente)}
-                                        className="w-full text-left px-3 py-2 hover:bg-blue-50 border-b border-gray-100 last:border-b-0"
+                                        className="bg-white w-full text-left px-3 py-2 hover:bg-blue-50 border-b border-gray-100 last:border-b-0"
                                     >
                                         <div className="font-medium text-sm text-gray-900">
                                             {cliente.nombre} {cliente.apellidos}
@@ -354,7 +365,8 @@ export default function RelacionClienteLote({
                                     setPorcentajeParticipacion('');
                                 }
                             }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none 
+                                    focus:ring-2 focus:ring-blue-500 bg-white text-gray-600"
                             disabled={asignando}
                         >
                             <option value="">Seleccione...</option>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../services/api_base";
 import { clienteLoteApi, clientesApi } from '@/services';
-import RelacionClienteLote from "./relacion_cliente_lote";
+import ModalRelacionClienteLote from "./modal_relacion_cliente_lote";
 
 
 export interface Lote_admin{
@@ -677,7 +677,7 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
             
             {/* Modal para asignar cliente */}
             {modalRelacionAbierto && (
-                <RelacionClienteLote
+                <ModalRelacionClienteLote
                     codigoLote={modalRelacionAbierto.codigo}
                     estadoLote={modalRelacionAbierto.estado}
                     loteId={modalRelacionAbierto.loteId}
