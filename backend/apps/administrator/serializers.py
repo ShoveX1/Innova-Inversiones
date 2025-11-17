@@ -130,6 +130,8 @@ class ClienteSerializer(serializers.ModelSerializer):
             'fecha_nacimiento',
             'estado',
             'estado_financiero_actual',
+            'montos_pendientes',
+            'fecha_conciliacion',
             'creado_en',
             'actualizado_en',
             'lotes'

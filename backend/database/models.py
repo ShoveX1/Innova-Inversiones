@@ -64,6 +64,8 @@ class Cliente(models.Model):
             ("deudor", "Deudor"),
             ("conciliado", "Conciliado"),
         ])
+    montos_pendientes = models.IntegerField(default=0 , null=True, blank=True)
+    fecha_conciliacion = models.DateField(null=True, blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 

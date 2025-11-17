@@ -111,12 +111,22 @@ export default function ListaClientes(){
                                                 {cliente.estado ? 'Activo' : 'Prospecto'}
                                             </span>
                                         </td>
-                                        <td className="px-2 py-2 border border-blue-500 truncate" title={cliente.lotes?.length ? `Lotes: ${cliente.lotes.map(l => l.codigo).join(', ')}` : ''}>
+                                        <td className="px-2 py-2 border border-blue-500 min-w-24">
                                             {cliente.lotes?.length ? (
-                                                cliente.lotes.length === 1 
-                                                    ? cliente.lotes[0].codigo 
-                                                    : `${cliente.lotes[0].codigo} (+${cliente.lotes.length - 1})`
-                                            ) : '--'}
+                                                <div className="grid grid-cols-2 gap-1">
+                                                    {cliente.lotes.map((lote, index) => (
+                                                        <span 
+                                                            key={lote.id || index}
+                                                            className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded text-[10px] font-medium text-center min-w-10"
+                                                            title={`Lote: ${lote.codigo}`}
+                                                        >
+                                                            {lote.codigo}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="text-gray-400">--</span>
+                                            )}
                                         </td>
                                         <td className="px-4 py-3 text-center border border-blue-500">
                                             <div className="flex gap-2 justify-center">
