@@ -135,8 +135,9 @@ export default function InfoPanel({ loading, error, lote, onClose, isAdmin = fal
           // Verificar que el código del lote en la relación sea exactamente igual
           // El serializer devuelve lote_codigo (según RelacionClienteLoteSerializer)
           const codigoRelacion = relacion.lote_codigo || relacion.lote?.codigo || relacion.codigo_lote;
-          // Comparación EXACTA: el código debe ser totalmente idéntico (carácter por carácter)
-          return codigoRelacion === lote.codigo;
+          // Comparación EXACTA pero sin importar mayúsculas/minúsculas
+          // El código debe ser idéntico carácter por carácter, pero case-insensitive
+          return codigoRelacion?.toLowerCase() === lote.codigo?.toLowerCase();
         }) || [];
         
         // Obtener la primera relación (puede haber múltiples, pero mostramos la primera)

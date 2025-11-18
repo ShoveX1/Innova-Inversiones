@@ -68,8 +68,9 @@ const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible
           // Verificar que el código del lote en la relación sea exactamente igual
           // El serializer devuelve lote_codigo (según RelacionClienteLoteSerializer)
           const codigoRelacion = relacion.lote_codigo || relacion.lote?.codigo || relacion.codigo_lote;
-          // Comparación EXACTA: el código debe ser totalmente idéntico (carácter por carácter)
-          return codigoRelacion === lote.codigo;
+          // Comparación EXACTA pero sin importar mayúsculas/minúsculas
+          // El código debe ser idéntico carácter por carácter, pero case-insensitive
+          return codigoRelacion?.toLowerCase() === lote.codigo?.toLowerCase();
         }) || [];
         
         // Obtener la primera relación (puede haber múltiples, pero mostramos la primera)
@@ -175,20 +176,20 @@ const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible
           <>
             {cargandoCliente ? (
               <div className="flex justify-between items-center pt-2 border-t border-gray-200 mt-2">
-                <span className="font-medium text-gray-600">Cliente:</span>
+                <span className="font-medium text-gray-600">Cliente: </span>
                 <span className="text-xs text-gray-500">Cargando...</span>
               </div>
             ) : clienteRelacionado ? (
               <div className="pt-2 border-t border-gray-200 mt-2 space-y-1">
                 <div className="flex justify-between items-center">
-                  <span className="font-medium text-gray-700">Cliente:</span>
+                  <span className="font-medium text-gray-700">Cliente: </span>
                   <span className="font-semibold text-gray-900 text-xs text-right">
                     {clienteRelacionado.cliente_nombre} {clienteRelacionado.cliente_apellidos}
                   </span>
                 </div>
                 {clienteRelacionado.cliente_dni && (
                   <div className="flex justify-between items-center">
-                    <span className="font-medium text-gray-700">DNI:</span>
+                    <span className="font-medium text-gray-700">DNI: </span>
                     <span className="font-semibold text-gray-900 text-xs">
                       {clienteRelacionado.cliente_dni}
                     </span>
@@ -197,7 +198,7 @@ const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible
               </div>
             ) : (
               <div className="flex justify-between items-center pt-2 border-t border-gray-200 mt-2">
-                <span className="font-medium text-gray-600">Cliente:</span>
+                <span className="font-medium text-gray-600">Cliente: </span>
                 <span className="text-xs text-gray-500">Sin asignar</span>
               </div>
             )}

@@ -614,7 +614,7 @@ def ListarRelacionesClienteLote(request):
         # Búsqueda por código de lote
         codigo_lote = request.query_params.get('codigo_lote', None)
         if codigo_lote:
-            relaciones = relaciones.filter(lote__codigo__icontains=codigo_lote)
+            relaciones = relaciones.filter(lote__codigo__iexact=codigo_lote)
         
         # Búsqueda por nombre de cliente (nombre o apellidos)
         nombre_cliente = request.query_params.get('nombre_cliente', None)
