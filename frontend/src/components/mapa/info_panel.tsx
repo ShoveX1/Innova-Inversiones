@@ -16,6 +16,7 @@ interface RelacionClienteLote {
   cliente_apellidos: string;
   cliente_dni?: string;
   tipo_relacion: string;
+  lote_codigo?: string; // Código del lote devuelto por el serializer
 }
 
 type Props = {
@@ -128,12 +129,23 @@ export default function InfoPanel({ loading, error, lote, onClose, isAdmin = fal
         const response = await clienteLoteApi.listar({ codigo_lote: lote.codigo });
         const data = response as { count: number; relaciones: RelacionClienteLote[] };
         
+        // IMPORTANTE: Filtrar relaciones para asegurar que solo se muestren clientes
+        // del lote con código EXACTAMENTE igual (el backend usa icontains que puede devolver resultados parciales)
+        const relacionesFiltradas = data.relaciones?.filter((relacion: any) => {
+          // Verificar que el código del lote en la relación sea exactamente igual
+          // El serializer devuelve lote_codigo (según RelacionClienteLoteSerializer)
+          const codigoRelacion = relacion.lote_codigo || relacion.lote?.codigo || relacion.codigo_lote;
+          // Comparación EXACTA pero sin importar mayúsculas/minúsculas
+          // El código debe ser idéntico carácter por carácter, pero case-insensitive
+          return codigoRelacion?.toLowerCase() === lote.codigo?.toLowerCase();
+        }) || [];
+        
         // Obtener la primera relación (puede haber múltiples, pero mostramos la primera)
-        if (data.relaciones && data.relaciones.length > 0) {
+        if (relacionesFiltradas.length > 0) {
           // Priorizar Propietario, luego Reservante, luego otros
-          const relacion = data.relaciones.find(r => r.tipo_relacion === 'Propietario') 
-            || data.relaciones.find(r => r.tipo_relacion === 'reservante')
-            || data.relaciones[0];
+          const relacion = relacionesFiltradas.find(r => r.tipo_relacion === 'Propietario') 
+            || relacionesFiltradas.find(r => r.tipo_relacion === 'reservante')
+            || relacionesFiltradas[0];
           setClienteRelacionado(relacion);
         } else {
           setClienteRelacionado(null);

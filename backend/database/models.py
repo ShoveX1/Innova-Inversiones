@@ -60,10 +60,13 @@ class Cliente(models.Model):
     estado = models.BooleanField(default=True)
     estado_financiero_actual=models.CharField(max_length=20, null=True, blank=True,
         choices=[
-            ("al_dia", "Al día"),
+            ("al dia", "Al dia"),
             ("deudor", "Deudor"),
             ("conciliado", "Conciliado"),
         ])
+    meses_deuda = models.IntegerField(default=0 , null=True, blank=True)
+    monto_cuota = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    fecha_conciliacion = models.DateField(null=True, blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 

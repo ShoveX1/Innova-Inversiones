@@ -29,6 +29,10 @@ interface RelacionClienteLote_admin {
 interface Cliente_admin {
     id: string;
     estado_financiero_actual: string;
+    meses_deuda: number;
+    monto_cuota: number;
+    fecha_conciliacion: string;
+    telefono: number;
 }
 type AdminPanelProps = { codigo?: string | null };
 export default function AdminPanel({ codigo }: AdminPanelProps){
@@ -38,7 +42,7 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [modalRelacionAbierto, setModalRelacionAbierto] = useState<{ codigo: string; estado: number; loteId?: number } | null>(null);
-    
+
     async function cargarLotes(selected?: string | null){
         try{
             setLoading(true);
@@ -93,13 +97,21 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
                                     const clienteData = await clientesApi.obtener(relacion.cliente);
                                     nuevosClientes[relacion.cliente] = {
                                         id: relacion.cliente,
-                                        estado_financiero_actual: clienteData.estado_financiero_actual || 'al_dia'
+                                        estado_financiero_actual: clienteData.estado_financiero_actual || 'al dia',
+                                        meses_deuda: clienteData.meses_deuda || 0,
+                                        monto_cuota: clienteData.monto_cuota || 0,
+                                        fecha_conciliacion: clienteData.fecha_conciliacion || null,
+                                        telefono: clienteData.telefono || 0
                                     };
                                 } catch(e: any) {
                                     console.error(`Error al cargar cliente ${relacion.cliente}:`, e);
                                     nuevosClientes[relacion.cliente] = {
                                         id: relacion.cliente,
-                                        estado_financiero_actual: 'al_dia'
+                                        estado_financiero_actual: 'al dia',
+                                        meses_deuda: 0,
+                                        monto_cuota: 0,
+                                        fecha_conciliacion: '',
+                                        telefono: 0
                                     };
                                 }
                             }
@@ -141,6 +153,8 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
     const [saving, setSaving] = useState<boolean>(false);
     const [drafts, setDrafts] = useState<Record<string, Partial<Record<EditableField, any>>>>({});
     const [clienteDrafts, setClienteDrafts] = useState<Record<string, string>>({}); // clienteId -> estado_financiero_actual
+    const [fechaConciliacionDrafts, setFechaConciliacionDrafts] = useState<Record<string, string>>({}); // clienteId -> fecha_conciliacion
+    const [mesesDeudaDrafts, setMesesDeudaDrafts] = useState<Record<string, number | null>>({}); // clienteId -> meses_deuda
     const [channel] = useState<BroadcastChannel | null>(() => {
         if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
             try { return new BroadcastChannel('lotes-updates'); } catch { return null; }
@@ -216,7 +230,11 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
         const loteDrafts = !!drafts[codigo] && Object.keys(drafts[codigo] as object).length > 0;
         // Verificar si hay cambios pendientes en clientes de este lote
         const relacionesLote = relaciones[codigo] || [];
-        const tieneCambiosClientes = relacionesLote.some(rel => clienteDrafts[rel.cliente]);
+        const tieneCambiosClientes = relacionesLote.some(rel => 
+            clienteDrafts[rel.cliente] || 
+            fechaConciliacionDrafts[rel.cliente] !== undefined ||
+            mesesDeudaDrafts[rel.cliente] !== undefined
+        );
         return loteDrafts || tieneCambiosClientes;
     }
     
@@ -224,6 +242,20 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
         setClienteDrafts(prev => ({
             ...prev,
             [clienteId]: estado
+        }));
+    }
+
+    function updateFechaConciliacionDraft(clienteId: string, fecha: string){
+        setFechaConciliacionDrafts(prev => ({
+            ...prev,
+            [clienteId]: fecha
+        }));
+    }
+
+    function updateMesesDeudaDraft(clienteId: string, meses: number | null){
+        setMesesDeudaDrafts(prev => ({
+            ...prev,
+            [clienteId]: meses
         }));
     }
 
@@ -240,7 +272,11 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
     async function saveRow(cod: string){
         const rowDraft = drafts[cod];
         const relacionesLote = relaciones[cod] || [];
-        const clientesConCambios = relacionesLote.filter(rel => clienteDrafts[rel.cliente]);
+        const clientesConCambios = relacionesLote.filter(rel => 
+            clienteDrafts[rel.cliente] || 
+            fechaConciliacionDrafts[rel.cliente] !== undefined ||
+            mesesDeudaDrafts[rel.cliente] !== undefined
+        );
         
         if (!rowDraft && clientesConCambios.length === 0) return;
         
@@ -264,14 +300,38 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
             
             // Guardar cambios de clientes
             for (const relacion of clientesConCambios) {
-                const nuevoEstado = clienteDrafts[relacion.cliente];
-                await clientesApi.actualizar(relacion.cliente, { estado_financiero_actual: nuevoEstado });
+                const nuevoEstado = clienteDrafts[relacion.cliente] || clientes[relacion.cliente]?.estado_financiero_actual || 'al dia';
+                const mesesDeuda = mesesDeudaDrafts[relacion.cliente] !== undefined 
+                    ? mesesDeudaDrafts[relacion.cliente] 
+                    : (clientes[relacion.cliente]?.meses_deuda ?? 0);
+                const montoCuota = clientes[relacion.cliente]?.monto_cuota || 0;
+                const fechaConciliacion = fechaConciliacionDrafts[relacion.cliente] !== undefined 
+                    ? fechaConciliacionDrafts[relacion.cliente] 
+                    : (clientes[relacion.cliente]?.fecha_conciliacion || null);
+                const telefono = clientes[relacion.cliente]?.telefono || 0;
+                
+                // Construir payload según el estado financiero
+                const payload: any = {
+                    estado_financiero_actual: nuevoEstado,
+                    fecha_conciliacion: fechaConciliacion || null
+                };
+                
+                // Solo incluir meses_deuda si el estado no es 'al dia'
+                if (nuevoEstado !== 'al dia') {
+                    payload.meses_deuda = mesesDeuda;
+                }
+                
+                await clientesApi.actualizar(relacion.cliente, payload);
                 // Actualizar el estado local del cliente
                 setClientes(prev => ({
                     ...prev,
                     [relacion.cliente]: {
                         id: relacion.cliente,
-                        estado_financiero_actual: nuevoEstado
+                        estado_financiero_actual: nuevoEstado,
+                        meses_deuda: mesesDeuda ?? 0,
+                        monto_cuota: montoCuota,
+                        fecha_conciliacion: fechaConciliacion || '',
+                        telefono: telefono
                     }
                 }));
             }
@@ -279,6 +339,20 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
             // Limpiar drafts de clientes guardados
             const clientesGuardados = clientesConCambios.map(rel => rel.cliente);
             setClienteDrafts(prev => {
+                const nuevo = { ...prev };
+                clientesGuardados.forEach(clienteId => {
+                    delete nuevo[clienteId];
+                });
+                return nuevo;
+            });
+            setFechaConciliacionDrafts(prev => {
+                const nuevo = { ...prev };
+                clientesGuardados.forEach(clienteId => {
+                    delete nuevo[clienteId];
+                });
+                return nuevo;
+            });
+            setMesesDeudaDrafts(prev => {
                 const nuevo = { ...prev };
                 clientesGuardados.forEach(clienteId => {
                     delete nuevo[clienteId];
@@ -302,6 +376,20 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
         // Descartar cambios de clientes de este lote
         const relacionesLote = relaciones[cod] || [];
         setClienteDrafts(prev => {
+            const nuevo = { ...prev };
+            relacionesLote.forEach(rel => {
+                delete nuevo[rel.cliente];
+            });
+            return nuevo;
+        });
+        setFechaConciliacionDrafts(prev => {
+            const nuevo = { ...prev };
+            relacionesLote.forEach(rel => {
+                delete nuevo[rel.cliente];
+            });
+            return nuevo;
+        });
+        setMesesDeudaDrafts(prev => {
             const nuevo = { ...prev };
             relacionesLote.forEach(rel => {
                 delete nuevo[rel.cliente];
@@ -646,18 +734,90 @@ export default function AdminPanel({ codigo }: AdminPanelProps){
                                                         )}
                                                     </div>
                                                     <div className="mt-2">
+                                                        <p className="block text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
+                                                            Telefono: {clientes[relacion.cliente]?.telefono}
+                                                        </p>
                                                         <label className="block text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
-                                                            Estado del Cliente
+                                                            Estado de Pago: 
                                                         </label>
                                                         <select
-                                                            value={clienteDrafts[relacion.cliente] || clientes[relacion.cliente]?.estado_financiero_actual || 'al_dia'}
+                                                            value={clienteDrafts[relacion.cliente] || clientes[relacion.cliente]?.estado_financiero_actual || 'al dia'}
                                                             onChange={(e) => updateClienteDraft(relacion.cliente, e.target.value)}
                                                             className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-xs sm:text-sm text-gray-800"
                                                         >
-                                                            <option value="al_dia">Al día</option>
-                                                            <option value="deudor">Deudor</option>
-                                                            <option value="conciliado">Conciliado</option>
+                                                            <option value="al dia">🟢 Al día</option>
+                                                            <option value="deudor">🔴 Deudor</option>
+                                                            <option value="conciliado">🟤 Conciliado</option>
                                                         </select>
+                                                        { (clienteDrafts[relacion.cliente] || clientes[relacion.cliente]?.estado_financiero_actual || 'al dia') === 'deudor' && (
+                                                            <div className="mt-2">
+                                                                <label className="block text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
+                                                                    Meses de Deuda: 
+                                                                </label>
+                                                                {mesesDeudaDrafts[relacion.cliente] === null ? (
+                                                                    <div className="space-y-2">
+                                                                        <input
+                                                                            type="number"
+                                                                            min="1"
+                                                                            max="34"
+                                                                            placeholder="Ingrese el número de meses"
+                                                                            value={mesesDeudaDrafts[relacion.cliente] !== undefined && mesesDeudaDrafts[relacion.cliente] !== null ? String(mesesDeudaDrafts[relacion.cliente]) : ''}
+                                                                            onChange={(e) => {
+                                                                                const val = e.target.value === '' ? null : Number(e.target.value);
+                                                                                updateMesesDeudaDraft(relacion.cliente, val);
+                                                                            }}
+                                                                            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-xs sm:text-sm text-gray-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                                        />
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                const currentValue = clientes[relacion.cliente]?.meses_deuda ?? 0;
+                                                                                updateMesesDeudaDraft(relacion.cliente, currentValue);
+                                                                            }}
+                                                                            className="text-xs text-blue-600 hover:text-blue-800"
+                                                                        >
+                                                                            Cancelar
+                                                                        </button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <select
+                                                                        value={mesesDeudaDrafts[relacion.cliente] !== undefined 
+                                                                            ? String(mesesDeudaDrafts[relacion.cliente] || '') 
+                                                                            : String(clientes[relacion.cliente]?.meses_deuda || '')}
+                                                                        onChange={(e) => {
+                                                                            if (e.target.value === 'input') {
+                                                                                updateMesesDeudaDraft(relacion.cliente, null);
+                                                                            } else {
+                                                                                const val = e.target.value === '' ? 0 : Number(e.target.value);
+                                                                                updateMesesDeudaDraft(relacion.cliente, val);
+                                                                            }
+                                                                        }}
+                                                                        className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-xs sm:text-sm text-gray-800"
+                                                                    >
+                                                                        <option value="">Seleccione...</option>
+                                                                        <option value="1">1 mes</option>
+                                                                        <option value="2">2 meses</option>
+                                                                        <option value="3">3 meses</option>
+                                                                        <option value="input">Otro (especificar)</option>
+                                                                    </select>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                        { clientes[relacion.cliente]?.estado_financiero_actual === 'conciliado' && (
+                                                            <div className="mt-2">
+                                                                <label className="block text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
+                                                                    Fecha de Conciliación: 
+                                                                </label>
+                                                                <input
+                                                                    type="date"
+                                                                    value={fechaConciliacionDrafts[relacion.cliente] !== undefined 
+                                                                        ? fechaConciliacionDrafts[relacion.cliente] 
+                                                                        : (clientes[relacion.cliente]?.fecha_conciliacion || '')}
+                                                                    onChange={(e) => updateFechaConciliacionDraft(relacion.cliente, e.target.value)}
+                                                                    className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-xs sm:text-sm text-gray-800 cursor-pointer"
+                                                                />
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))
