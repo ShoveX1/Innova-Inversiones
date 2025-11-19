@@ -130,8 +130,9 @@ class ClienteSerializer(serializers.ModelSerializer):
             'fecha_nacimiento',
             'estado',
             'estado_financiero_actual',
-            'montos_pendientes',
+            'meses_deuda',
             'fecha_conciliacion',
+            'monto_cuota',
             'creado_en',
             'actualizado_en',
             'lotes'
@@ -186,10 +187,21 @@ class ClienteSerializer(serializers.ModelSerializer):
     def validate_estado_financiero_actual(self, value):
         """Validar que el estado financiero actual sea válido"""
         if value is not None:
-            opciones_validas = ['al_dia', 'deudor', 'conciliado']
+            opciones_validas = ['al dia', 'deudor', 'conciliado']
             if value not in opciones_validas:
                 raise serializers.ValidationError(
                     f"Estado financiero inválido. Debe ser uno de: {', '.join(opciones_validas)}"
                 )
         return value
+    
+    def update(self, instance, validated_data):
+        """Actualizar instancia del cliente con lógica especial para estado financiero"""
+        # Si el estado financiero cambia a 'al dia', resetear meses_deuda y fecha_conciliacion
+        estado_financiero = validated_data.get('estado_financiero_actual')
+        if estado_financiero == 'al dia':
+            validated_data['meses_deuda'] = 0
+            validated_data['fecha_conciliacion'] = None
+        
+        # Actualizar la instancia con los datos validados
+        return super().update(instance, validated_data)
 
