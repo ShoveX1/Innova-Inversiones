@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { api } from "../../../../services/api_base";
 import { clienteLoteApi, clientesApi } from '@/services';
 import AsignarCliente from "./asignar_cliente";
+import { Phone, DollarSign} from "lucide-react";
 
 interface RelacionClienteLote_admin {
     id: string;
@@ -52,9 +53,9 @@ export default function EdicionCliente({
     const [modalAbierto, setModalAbierto] = useState(false);
 
     const TIPO_RELACION_LABELS: Record<string, string> = {
-        'Propietario': '👤 Propietario',
-        'reservante': '📋 Reservante',
-        'copropietario': '👥 Copropietario',
+        'Propietario': 'Propietario',
+        'reservante': 'Reservante',
+        'copropietario': 'Copropietario',
     };
 
     // Buscar lote por código
@@ -308,7 +309,7 @@ export default function EdicionCliente({
                                     <div className="grid grid-cols-2 gap-2 mb-3">
                                         <div>
                                             <label className="block text-[9px] text-gray-500 uppercase font-semibold mb-1">
-                                                📞 Teléfono
+                                                <Phone className="w-4 h-4 text-blue-500 inline-block" /> Teléfono
                                             </label>
                                             <input
                                                 type="number"
@@ -323,7 +324,7 @@ export default function EdicionCliente({
                                         </div>
                                         <div>
                                             <label className="block text-[9px] text-gray-500 uppercase font-semibold mb-1">
-                                                💰 Monto Cuota
+                                                <DollarSign className="w-4 h-4 text-blue-500 inline-block" /> Monto Cuota
                                             </label>
                                             <input
                                                 type="number"
@@ -332,7 +333,7 @@ export default function EdicionCliente({
                                                     ? montoCuotaDrafts[relacion.cliente] 
                                                     : (clientes[relacion.cliente]?.monto_cuota || '')}
                                                 onChange={(e) => updateMontoCuotaDraft(relacion.cliente, e.target.value)}
-                                                className="w-full px-2 py-1.5 rounded-md border border-green-200 bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-xs text-gray-800"
+                                                className="w-full px-2 py-1.5 rounded-md border border-blue-200 bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs text-gray-800"
                                                 disabled={saving}
                                                 placeholder="S/. 0.00"
                                             />

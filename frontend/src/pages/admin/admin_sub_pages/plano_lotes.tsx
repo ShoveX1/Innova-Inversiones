@@ -3,6 +3,7 @@ import MapaLotes from "../../../components/mapa/mapa_lotes";
 import InfoPanel from "../../../components/mapa/info_panel";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { api } from "@/services";
+import { Pencil, X } from "lucide-react";
 
 export interface Lote {
     codigo: string;
@@ -116,7 +117,7 @@ export default function PlanoLotes({ navCollapsed }: PlanoLotesProps) {
                         onClick={() => setShowAdminPanel(prev => !prev)}
                         className="bg-blue-600 text-white mx-4 my-auto rounded-lg w-8 h-8 sm:w-36 sm:h-12 flex items-center justify-center"
                     >
-                        <span className="block sm:hidden">{showAdminPanel ? '✕' : '🖊️'}</span>
+                        <span className="block sm:hidden">{showAdminPanel ? <X className="w-4 h-4 text-white" /> : <Pencil className="w-4 h-4 text-white" />}</span>
                         <p className="hidden sm:block">{showAdminPanel ? 'Cerrar Edición' : 'Editar Lotes'}</p>
                     </button>
                 </div>
