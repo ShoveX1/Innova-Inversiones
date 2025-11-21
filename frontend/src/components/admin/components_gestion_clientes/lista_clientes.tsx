@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { clientesApi } from '@/services';
+import EditarCliente from './editar_cliente';
+import { Pencil, Trash2, Loader2 } from 'lucide-react';
 
 interface Cliente {
     id: string;
@@ -32,26 +34,58 @@ export default function ListaClientes(){
     const [clientes, setClientes] = useState<Cliente[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [clienteEditando, setClienteEditando] = useState<string | null>(null);
+    const [clienteEliminando, setClienteEliminando] = useState<string | null>(null);
+
+    const cargarClientes = async () => {
+        try {
+            setLoading(true);
+            const response = await clientesApi.listar();
+            // El backend devuelve { count: number, clientes: Cliente[] }
+            const data = response as { count: number; clientes: Cliente[] };
+            setClientes(data.clientes || []);
+            setError(null);
+        } catch (err) {
+            console.error('Error al cargar clientes:', err);
+            setError('Error al cargar los clientes');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const cargarClientes = async () => {
-            try {
-                setLoading(true);
-                const response = await clientesApi.listar();
-                // El backend devuelve { count: number, clientes: Cliente[] }
-                const data = response as { count: number; clientes: Cliente[] };
-                setClientes(data.clientes || []);
-                setError(null);
-            } catch (err) {
-                console.error('Error al cargar clientes:', err);
-                setError('Error al cargar los clientes');
-            } finally {
-                setLoading(false);
-            }
-        };
-
         cargarClientes();
     }, []);
+
+    const handleEditar = (clienteId: string) => {
+        setClienteEditando(clienteId);
+    };
+
+    const handleEliminar = async (clienteId: string, nombreCompleto: string) => {
+        const confirmar = window.confirm(
+            `¿Estás seguro de que deseas ELIMINAR PERMANENTEMENTE al cliente "${nombreCompleto}"?\n\n` +
+            `⚠️ ADVERTENCIA: Esta acción no se puede deshacer. El cliente será eliminado completamente de la base de datos.`
+        );
+
+        if (!confirmar) {
+            return;
+        }
+
+        try {
+            setClienteEliminando(clienteId);
+            // Eliminación física (hard delete)
+            await clientesApi.eliminar(clienteId, true);
+            // Recargar la lista de clientes
+            await cargarClientes();
+            alert('Cliente eliminado permanentemente');
+        } catch (err: any) {
+            console.error('Error al eliminar el cliente:', err);
+            const errorMessage = err?.response?.data?.error || err?.message || 'Error al eliminar el cliente';
+            alert(`Error: ${errorMessage}`);
+        } finally {
+            setClienteEliminando(null);
+        }
+    };
 
     return (
         <div>
@@ -130,11 +164,28 @@ export default function ListaClientes(){
                                         </td>
                                         <td className="px-4 py-3 text-center border border-blue-500">
                                             <div className="flex gap-2 justify-center">
-                                                <button className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-200 transition-colors">
-                                                    ✏️
+                                                <button 
+                                                    onClick={() => handleEditar(cliente.id)}
+                                                    className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition-colors flex items-center justify-center"
+                                                    title="Editar cliente"
+                                                >
+                                                    <Pencil className="w-4 h-4" />
                                                 </button>
-                                                <button className="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-200 hover:border-red-500 transition-colors">
-                                                    🗑️
+                                                <button 
+                                                    onClick={() => handleEliminar(cliente.id, `${cliente.nombre} ${cliente.apellidos}`)}
+                                                    disabled={clienteEliminando === cliente.id}
+                                                    className={`px-3 py-1 rounded-md text-sm transition-colors flex items-center justify-center ${
+                                                        clienteEliminando === cliente.id
+                                                            ? 'bg-gray-400 cursor-not-allowed'
+                                                            : 'bg-red-500 text-white hover:bg-red-600'
+                                                    }`}
+                                                    title="Eliminar cliente"
+                                                >
+                                                    {clienteEliminando === cliente.id ? (
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="w-4 h-4" />
+                                                    )}
                                                 </button>
                                             </div>
                                         </td>
@@ -145,6 +196,18 @@ export default function ListaClientes(){
                     </table>
                 </div>
         </section>
+        
+        {/* Modal de edición */}
+        {clienteEditando && (
+            <EditarCliente
+                clienteId={clienteEditando}
+                isOpen={true}
+                onClose={() => setClienteEditando(null)}
+                onSuccess={() => {
+                    cargarClientes();
+                }}
+            />
+        )}
     </div>
   );
 }

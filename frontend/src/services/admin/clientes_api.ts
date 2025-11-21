@@ -5,6 +5,11 @@ export const clientesApi = {
   crear: (data: any) => api.post('api/admin/clientes/crear/', data),
   obtener: (id: string) => api.get(`api/admin/clientes/obtener/${id}/`),
   actualizar: (id: string, data: any) => api.request(`api/admin/clientes/actualizar/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }),
-  eliminar: (id: string) => api.delete(`api/admin/clientes/eliminar/${id}/`),
+  eliminar: (id: string, hardDelete: boolean = false) => {
+    const url = hardDelete 
+      ? `api/admin/clientes/eliminar/${id}/?hard=true`
+      : `api/admin/clientes/eliminar/${id}/`;
+    return api.delete(url);
+  },
   activar: (id: string) => api.put(`api/admin/clientes/activar/${id}/`, {}),
 };
