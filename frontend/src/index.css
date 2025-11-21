@@ -75,28 +75,28 @@ button:focus-visible {
 }
 
 /* Scrollbar personalizado - estilo móvil para desktop */
-.custom-scrollbar {
+*{
   /* Firefox */
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-color: #3b73db transparent;
 }
 
-.custom-scrollbar::-webkit-scrollbar {
+*::-webkit-scrollbar {
   width: 6px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
   background: transparent;
   border-radius: 10px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 10px;
   transition: background 0.2s ease;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+*::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
