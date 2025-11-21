@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../../services/api_base";
+import { Pencil } from "lucide-react";
 
 
 export interface Lote_admin{
@@ -268,7 +269,7 @@ export default function AdminPanel({
                 <span className="text-xs sm:text-sm text-gray-800 flex-1">
                     {display == null || display === '' ? '-' : String(display)}
                 </span>
-                <span className="ml-2 text-gray-400 text-[10px] sm:text-xs">✏️</span>
+                <span className="ml-2 text-gray-400 text-[10px] sm:text-xs"><Pencil className="w-4 h-4 text-blue-500" /></span>
             </div>
         );
     }
@@ -319,7 +320,7 @@ export default function AdminPanel({
                 <span className="text-xs sm:text-sm text-gray-800 flex-1">
                     {display == null || display === '' ? 'S/. 0' : `S/. ${String(display)}`}
                 </span>
-                <span className="ml-2 text-gray-400 text-[10px] sm:text-xs">✏️</span>
+                <span className="ml-2 text-gray-400 text-[10px] sm:text-xs"><Pencil className="w-4 h-4 text-blue-500" /></span>
             </div>
         );
     }
@@ -378,7 +379,7 @@ export default function AdminPanel({
                 <span className="text-xs sm:text-sm text-gray-800 flex-1">
                     {ESTADO_EMOJIS[currentEstado] || '🔴'} {ESTADO_LABELS[currentEstado] || ''}
                 </span>
-                <span className="ml-2 text-gray-400 text-[10px] sm:text-xs">✏️</span>
+                <span className="ml-2 text-gray-400 text-[10px] sm:text-xs"><Pencil className="w-4 h-4 text-blue-500" /></span>
             </div>
         );
     }
