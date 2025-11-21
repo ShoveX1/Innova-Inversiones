@@ -34,13 +34,22 @@ interface LoteInfoPanelProps {
 
 const currency = new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" });
 
-const colorMap: Record<string, string> = {
-  "1": "#f5cdadff", // beige - Disponible
-  "2": "#fff200ff", // Amarillo - Separado
-  "3": "#ef1688ff", // morado - Vendido
-  "4": "#ef1688ff", // morado - Bloqueado
-  "5": "#ef1688ff", // morado - Bloqueo Comercial
-  "6": "#fff200ff", // Amarillo - Separado comercial
+const getColorMap = (isAdmin: boolean): Record<string, string> => {
+  return isAdmin ? {
+    "1": "#f5cdadff", // beige - Disponible
+    "2": "#fff200ff", // Amarillo - Separado
+    "3": "#ef1688ff", // morado - Vendido
+    "4": "#9ca3af", // gris - Bloqueado
+    "5": "#e0e0e0", // gris claro - Bloqueo Comercial
+    "6": "#FF8C00", // naranja - Separado comercial
+  } : {
+    "1": "#f5cdadff", // beige - Disponible
+    "2": "#fff200ff", // Amarillo - Separado
+    "3": "#ef1688ff", // morado - Vendido
+    "4": "#ef1688ff", // morado - Bloqueado
+    "5": "#ef1688ff", // morado - Bloqueo Comercial
+    "6": "#fff200ff", // Amarillo - Separado comercial
+  };
 };
 
 const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible, isAdmin = false }) => {
@@ -102,7 +111,7 @@ const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible
     <div 
       className="
         absolute 
-        bg-white/95 
+        bg-white/80
         backdrop-blur-sm 
         shadow-lg 
         rounded-lg 
@@ -120,7 +129,7 @@ const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible
         top: Math.min(position.y - 10, window.innerHeight - 150),
       }}
     >
-      <h3 className="text-sm font-bold text-gray-800 mb-2 text-center">
+      <h3 className="text-sm font-bold text-gray-800 mb-2 text-center ">
         Información del Lote
       </h3>
       
@@ -156,9 +165,20 @@ const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible
             <div 
               className="w-3 h-3 rounded-full border border-gray-300 shadow-sm"
               style={{ 
-                backgroundColor: colorMap[lote.estado as keyof typeof colorMap] || "#ffffff" 
+                backgroundColor: getColorMap(isAdmin)[lote.estado] || "#ffffff" 
               }}
             ></div>
+            {isAdmin ? (
+              <span className="font-semibold text-gray-900">
+              {lote.estado === "1" ? "Disponible" :
+               lote.estado === "2" ? "Separado" :
+               lote.estado === "3" ? "Vendido" :
+               lote.estado === "4" ? "Bloqueado" :
+               lote.estado === "5" ? "Bloqueado Comercial" :
+               lote.estado === "6" ? "Separado comercial" :
+               lote.estado}
+            </span>)
+            :(
             <span className="font-semibold text-gray-900">
               {lote.estado === "1" ? "Disponible" :
                lote.estado === "2" ? "Separado" :
@@ -167,7 +187,7 @@ const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible
                lote.estado === "5" ? "Vendido" :
                lote.estado === "6" ? "Separado" :
                lote.estado}
-            </span>
+            </span>)}
           </div>
         </div>
 

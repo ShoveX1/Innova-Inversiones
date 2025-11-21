@@ -1,6 +1,7 @@
 // src/components/info_panel.tsx
 import { useEffect, useState } from 'react';
-import { clienteLoteApi } from '../../services/admin/cliente_lote_api';
+import { clienteLoteApi } from '@/services';
+import { DollarSign, X } from 'lucide-react';
 
 interface Cliente {
   id: string;
@@ -39,8 +40,15 @@ type Props = {
 
 const currency = new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" });
 
-function estadoBadge(estado: string, estadoNombre: string) {
-  const map: Record<string, { bg: string; text: string; label: string; emoji: string }> = {
+function estadoBadge(estado: string, estadoNombre: string, isAdmin: boolean) {
+  const map: Record<string, { bg: string; text: string; label: string; emoji: string }> = isAdmin ? {
+    "1": { bg: "bg-green-100", text: "text-green-700", label: "Disponible", emoji: "🟢" },
+    "2": { bg: "bg-yellow-100", text: "text-yellow-800", label: "Separado", emoji: "🟡" },
+    "3": { bg: "bg-red-100", text: "text-red-700", label: "Vendido", emoji: "🔴" },
+    "4": { bg: "bg-gray-300", text: "text-gray-700", label: "Bloqueado", emoji: "⚪" },
+    "5": { bg: "bg-gray-100", text: "text-gray-700", label: "Bloqueo Comercial", emoji: "⚪" },
+    "6": { bg: "bg-orange-100", text: "text-orange-800", label: "Separado Comercial", emoji: "🟠" },
+  } :{
     "1": { bg: "bg-green-100", text: "text-green-700", label: "Disponible", emoji: "🟢" },
     "2": { bg: "bg-yellow-100", text: "text-yellow-800", label: "Separado", emoji: "🟡" },
     "3": { bg: "bg-red-100", text: "text-red-700", label: "Vendido", emoji: "🔴" },
@@ -171,12 +179,17 @@ export default function InfoPanel({ loading, error, lote, onClose, isAdmin = fal
       className="fixed z-50"
       style={
         isMobile
-          ? {
+          ? ({
               left: 16,
               right: 16,
               bottom: 16,
               width: 'auto',
-            }
+            })
+          : isAdmin ? ({
+              left: `calc(250px + ${position.x}px)`,
+              top: `calc(12vh + ${position.y}px)`,
+              width: 320,
+            })
           : {
               left: position.x,
               top: `calc(10vh + ${position.y}px)`,
@@ -223,7 +236,7 @@ export default function InfoPanel({ loading, error, lote, onClose, isAdmin = fal
                 "
                 aria-label="Cerrar panel"
               >
-                ✕
+                <X className="w-4 h-4 text-white" />
               </button>
             )}
           </div>
@@ -261,7 +274,7 @@ export default function InfoPanel({ loading, error, lote, onClose, isAdmin = fal
               <>
                 {/* Estado y área en una línea */}
                 <div className="flex items-center justify-between">
-                  {estadoBadge(lote.estado, lote.estado_nombre)}
+                  {estadoBadge(lote.estado, lote.estado_nombre, isAdmin)}
                   <div className="text-right">
                     <div className="text-xs text-gray-500">Área</div>
                     <div className="text-xs sm:text-sm font-semibold text-gray-800">{lote.area_lote} m²</div>
@@ -269,62 +282,182 @@ export default function InfoPanel({ loading, error, lote, onClose, isAdmin = fal
                 </div>
 
                 {/* Precio destacado */}
-                {lote.estado === "1" ? (
-                  <div className="
-                    bg-gradient-to-r from-green-50 to-emerald-50 
-                    border border-green-200 
-                    rounded-lg 
-                    p-2 sm:p-3
-                  ">
-                    <div className="text-xs text-green-600 font-medium">💰 Precio total</div>
-                    <div className="text-base sm:text-lg font-bold text-green-800">
-                      {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}
-                    </div>
-                    {lote.precio_metro_cuadrado != null && (
-                      <div className="text-xs text-green-600">
-                        {currency.format(Number(lote.precio_metro_cuadrado))} / m²
+                {isAdmin ? (
+                  lote.estado === "1" ? (
+                    <div className="
+                      bg-gradient-to-r from-green-50 to-emerald-50 
+                      border border-green-200 
+                      rounded-lg 
+                      p-2 sm:p-3
+                    ">
+                      <div className="text-xs text-green-600 font-medium">
+                        <DollarSign className="w-4 h-4 text-green-600 inline-block" /> Precio total</div>
+                      <div className="text-base sm:text-lg font-bold text-green-800">
+                        {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}
                       </div>
-                    )}
-                  </div>
-                ) :
-                lote.estado === "2" || lote.estado === "6" ? (
-                  <div className="
-                    bg-gradient-to-r from-yellow-50 to-amber-50 
-                    border border-yellow-200 
-                    rounded-lg 
-                    p-2 sm:p-3
-                  ">
-                    <div className="text-xs text-yellow-600 font-medium">💰 Precio total</div>
-                    <div className="text-base sm:text-lg font-bold text-yellow-800">
-                      {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}
+                      {lote.precio_metro_cuadrado != null && (
+                        <div className="text-xs text-green-600">
+                          {currency.format(Number(lote.precio_metro_cuadrado))} / m²
+                        </div>
+                      )}
                     </div>
-                    {lote.precio_metro_cuadrado != null && (
-                      <div className="text-xs text-yellow-600">
-                        {currency.format(Number(lote.precio_metro_cuadrado))} / m²
+                  ) :
+                  lote.estado === "2" ? (
+                    <div className="
+                      bg-gradient-to-r from-yellow-50 to-amber-50 
+                      border border-yellow-200 
+                      rounded-lg 
+                      p-2 sm:p-3
+                    ">
+                      <div className="text-xs text-yellow-600 font-medium">
+                        <DollarSign className="w-4 h-4 text-yellow-600 inline-block" /> Precio total</div>
+                      <div className="text-base sm:text-lg font-bold text-yellow-800">
+                        {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className={`
-                    rounded-lg 
-                    p-2 sm:p-3 
-                    ${lote.estado === "3" 
-                      ? "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200" 
-                      : "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200"
-                    }
-                  `}>
-                    <div className={`text-xs font-medium ${
-                      lote.estado === "3" ? "text-red-600" : "text-red-600"
-                    }`}>
-                      {lote.estado === "3" ? "🔴 Estado" : "🔴 Estado"}
+                      {lote.precio_metro_cuadrado != null && (
+                        <div className="text-xs text-yellow-600">
+                          {currency.format(Number(lote.precio_metro_cuadrado))} / m²
+                        </div>
+                      )}
                     </div>
-                    <div className={`text-base sm:text-lg font-bold ${
-                      lote.estado === "3" ? "text-red-800" : "text-red-800"
-                    }`}>
-                      {lote.estado === "3" ? "Vendido" : "Vendido"}
+                  ) : 
+                  lote.estado === "3" ? (
+                    <div className="
+                      bg-gradient-to-r from-red-50 to-rose-50 
+                      border border-red-200 
+                      rounded-lg 
+                      p-2 sm:p-3
+                    ">
+                      <div className="text-xs text-red-600 font-medium">
+                        <DollarSign className="w-4 h-4 text-red-600 inline-block" /> Precio total</div>
+                      <div className="text-base sm:text-lg font-bold text-red-800">
+                        {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}
+                      </div>
+                      {lote.precio_metro_cuadrado != null && (
+                        <div className="text-xs text-red-600">
+                          {currency.format(Number(lote.precio_metro_cuadrado))} / m²
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  ) :
+                  lote.estado === "4" ? (
+                    <div className="
+                      bg-gradient-to-r from-gray-50 to-gray-200 
+                      border border-gray-200 
+                      rounded-lg 
+                      p-2 sm:p-3
+                    ">
+                      <div className="text-xs text-gray-600 font-medium">
+                        <DollarSign className="w-4 h-4 text-gray-600 inline-block" /> Precio total</div>
+                      <div className="text-base sm:text-lg font-bold text-gray-800">
+                        {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}
+                      </div>
+                      {lote.precio_metro_cuadrado != null && (
+                        <div className="text-xs text-gray-600">
+                          {currency.format(Number(lote.precio_metro_cuadrado))} / m²
+                        </div>
+                      )}
+                    </div>
+                  ) :
+                  lote.estado === "5" ? (
+                    <div className="
+                      bg-gradient-to-r from-gray-50 to-gray-200 
+                      border border-gray-200 
+                      rounded-lg 
+                      p-2 sm:p-3
+                    ">
+                      <div className="text-xs text-gray-600 font-medium">
+                        <DollarSign className="w-4 h-4 text-gray-600 inline-block" /> Precio total</div>
+                      <div className="text-base sm:text-lg font-bold text-gray-800">
+                        {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}
+                      </div>
+                      {lote.precio_metro_cuadrado != null && (
+                        <div className="text-xs text-gray-600">
+                          {currency.format(Number(lote.precio_metro_cuadrado))} / m²
+                        </div>
+                      )}
+                    </div>
+                  ) :
+                  lote.estado === "6" ? (
+                    <div className="
+                      bg-gradient-to-r from-orange-50 to-orange-200 
+                      border border-orange-200 
+                      rounded-lg 
+                      p-2 sm:p-3
+                    ">
+                      <div className="text-xs text-orange-600 font-medium">
+                        <DollarSign className="w-4 h-4 text-orange-600 inline-block" /> Precio total</div>
+                      <div className="text-base sm:text-lg font-bold text-orange-800">
+                        {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}
+                      </div>
+                      {lote.precio_metro_cuadrado != null && (
+                        <div className="text-xs text-orange-600">
+                          {currency.format(Number(lote.precio_metro_cuadrado))} / m²
+                        </div>
+                      )}
+                    </div>
+                  ) : (null)
+                ):(
+                  lote.estado === "1" ? (
+                    <div className="
+                      bg-gradient-to-r from-green-50 to-emerald-50 
+                      border border-green-200 
+                      rounded-lg 
+                      p-2 sm:p-3
+                    ">
+                      <div className="text-xs text-green-600 font-medium">
+                        <DollarSign className="w-4 h-4 text-green-600 inline-block" /> Precio total</div>
+                      <div className="text-base sm:text-lg font-bold text-green-800">
+                        {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}
+                      </div>
+                      {lote.precio_metro_cuadrado != null && (
+                        <div className="text-xs text-green-600">
+                          {currency.format(Number(lote.precio_metro_cuadrado))} / m²
+                        </div>
+                      )}
+                    </div>
+                  ) :
+                  lote.estado === "2" || lote.estado === "6" ? (
+                    <div className="
+                      bg-gradient-to-r from-yellow-50 to-amber-50 
+                      border border-yellow-200 
+                      rounded-lg 
+                      p-2 sm:p-3
+                    ">
+                      <div className="text-xs text-yellow-600 font-medium">
+                        <DollarSign className="w-4 h-4 text-yellow-600 inline-block" /> Precio total</div>
+                      <div className="text-base sm:text-lg font-bold text-yellow-800">
+                        {lote.precio != null ? currency.format(Number(lote.precio)) : "—"}
+                      </div>
+                      {lote.precio_metro_cuadrado != null && (
+                        <div className="text-xs text-yellow-600">
+                          {currency.format(Number(lote.precio_metro_cuadrado))} / m²
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className={`
+                      rounded-lg 
+                      p-2 sm:p-3 
+                      ${lote.estado === "3" 
+                        ? "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200" 
+                        : "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200"
+                      }
+                    `}>
+                      <div className={`text-xs font-medium ${
+                        lote.estado === "3" ? "text-red-600" : "text-red-600"
+                      }`}>
+                        {lote.estado === "3" ? "🔴 Estado" : "🔴 Estado"}
+                      </div>
+                      <div className={`text-base sm:text-lg font-bold ${
+                        lote.estado === "3" ? "text-red-800" : "text-red-800"
+                      }`}>
+                        {lote.estado === "3" ? "Vendido" : "Vendido"}
+                      </div>
+                    </div>
+                  )
                 )}
+                
 
                 {/* Ubicación compacta */}
                 <div className="
