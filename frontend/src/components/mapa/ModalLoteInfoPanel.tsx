@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { clienteLoteApi } from '../../services/admin/cliente_lote_api';
+import { clienteLoteApi } from '@/services';
 
 interface Lote {
   codigo: string;
@@ -152,12 +152,18 @@ const LoteInfoPanel: React.FC<LoteInfoPanelProps> = ({ lote, position, isVisible
           <span className="font-semibold text-gray-900">{lote.area_lote} m²</span>
         </div>
         
-        {lote.precio && (lote.estado === "1" || lote.estado === "2" || lote.estado === "6") && (
+        {isAdmin ?(
+          <div className="flex justify-between items-center">
+          <span className="font-medium">Precio:</span>
+          <span className="font-semibold text-green-600"> {currency.format(Number(lote.precio))}</span>
+        </div>
+        ) : (
+        lote.precio && (lote.estado === "1" || lote.estado === "2" || lote.estado === "6") && (
           <div className="flex justify-between items-center">
             <span className="font-medium">Precio:</span>
             <span className="font-semibold text-green-600"> {currency.format(Number(lote.precio))}</span>
           </div>
-        )}
+        ))}
         
         <div className="flex justify-between items-center">
           <span className="font-medium">Estado:</span>
